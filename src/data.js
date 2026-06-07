@@ -18,5 +18,6 @@ export const initialTasks = [
 export const stages = [
   { id: 'todo', title: 'К выполнению' },
   { id: 'in-progress', title: 'В работе' },
+  { id: 'testing', title: 'Тестирование' },
   { id: 'done', title: 'Готово' },
 ];

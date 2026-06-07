@@ -90,7 +90,7 @@ export default function App() {
     : null;
 
   function handleDragOver(event) {
-    const stagesList = ['todo', 'in-progress', 'done'];
+    const stagesList = ['todo', 'in-progress', 'testing', 'done'];
     const customerIds = customers.map(c => c.id);
     
     const { active, over } = event;
@@ -121,7 +121,7 @@ export default function App() {
   }
 
   async function handleDragEnd(event) {
-    const stagesList = ['todo', 'in-progress', 'done'];
+    const stagesList = ['todo', 'in-progress', 'testing', 'done'];
     const customerIds = customers.map(c => c.id);
     
     const { active, over } = event;

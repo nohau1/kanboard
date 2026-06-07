@@ -65,11 +65,11 @@ if (tasksExist.length === 0) {
   insertTask.run('t1', 'Дизайн главной страницы', 'todo', 'c1');
   insertTask.run('t2', 'Настройка сервера', 'todo', 'c2');
   insertTask.run('t3', 'Интеграция API', 'in-progress', 'c1');
-  insertTask.run('t4', 'Тестирование модуля', 'in-progress', 'c3');
+  insertTask.run('t4', 'Тестирование модуля', 'testing', 'c3');
   insertTask.run('t5', 'Документация', 'done', 'c2');
   insertTask.run('t6', 'Исправление багов', 'done', 'c1');
   insertTask.run('t7', 'Оптимизация БД', 'todo', 'c3');
-  insertTask.run('t8', 'Деплой на prod', 'in-progress', 'c2');
+  insertTask.run('t8', 'Деплой на prod', 'testing', 'c2');
 }
 
 export default db;

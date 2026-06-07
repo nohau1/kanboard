@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { CustomerColumn } from './CustomerColumn';
 
-const STAGE_ORDER = { 'in-progress': 0, 'todo': 1, 'done': 2 };
+const STAGE_ORDER = { 'in-progress': 0, 'testing': 1, 'todo': 2, 'done': 3 };
 
 export function CustomerKanbanBoard({ tasks, customers, onAddTask, onEditTask, onDeleteTask }) {
-  const [stageFilter, setStageFilter] = useState(['in-progress', 'todo']);
+  const [stageFilter, setStageFilter] = useState(['in-progress', 'testing', 'todo']);
 
   const filteredTasks = tasks.filter(t => stageFilter.includes(t.stage));
   
@@ -19,7 +19,7 @@ export function CustomerKanbanBoard({ tasks, customers, onAddTask, onEditTask, o
     <div className="customer-board">
       <div className="stage-filter">
         <span>Показывать:</span>
-        {['todo', 'in-progress', 'done'].map(stage => (
+        {['todo', 'in-progress', 'testing', 'done'].map(stage => (
           <label key={stage}>
             <input
               type="checkbox"
@@ -32,7 +32,7 @@ export function CustomerKanbanBoard({ tasks, customers, onAddTask, onEditTask, o
                 }
               }}
             />
-            {stage === 'todo' ? 'К выполнению' : stage === 'in-progress' ? 'В работе' : 'Готово'}
+            {stage === 'todo' ? 'К выполнению' : stage === 'in-progress' ? 'В работе' : stage === 'testing' ? 'Тестирование' : 'Готово'}
           </label>
         ))}
       </div>
