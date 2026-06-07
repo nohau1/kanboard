@@ -79,11 +79,10 @@ export default function App() {
     ? customers.find(c => c.id === activeTask.customer_id)
     : null;
 
-  function handleDragStart(event) {
-    setActiveId(event.active.id);
-  }
-
   function handleDragOver(event) {
+    const stagesList = ['todo', 'in-progress', 'done'];
+    const customerIds = customers.map(c => c.id);
+    
     const { active, over } = event;
     if (!over) return;
 
@@ -94,18 +93,27 @@ export default function App() {
     if (!activeTask) return;
 
     const overTask = tasks.find(t => t.id === overId);
-    const newStage = overTask ? overTask.stage : overId;
+    let newStage;
+    
+    if (overTask) {
+      newStage = overTask.stage;
+    } else if (stagesList.includes(overId) || customerIds.includes(overId)) {
+      newStage = overId;
+    } else {
+      return;
+    }
     
     hoverStageRef.current = newStage;
+  }
 
-    if (activeTask.stage !== newStage) {
-      setTasks(items => items.map(item => 
-        item.id === activeId ? { ...item, stage: newStage } : item
-      ));
-    }
+  function handleDragStart(event) {
+    setActiveId(event.active.id);
   }
 
   async function handleDragEnd(event) {
+    const stagesList = ['todo', 'in-progress', 'done'];
+    const customerIds = customers.map(c => c.id);
+    
     const { active, over } = event;
     setActiveId(null);
 
@@ -117,11 +125,15 @@ export default function App() {
     const targetStage = hoverStageRef.current || originalStage;
     hoverStageRef.current = null;
 
+    const overId = over?.id;
+    const overTask = overId ? tasks.find(t => t.id === overId) : null;
+    const isOverDroppable = overId && (stagesList.includes(overId) || customerIds.includes(overId));
+
     if (originalStage === targetStage) {
-      if (over && over.id !== activeId) {
+      if (overTask && overId !== activeId) {
         const stageTasks = tasks.filter(t => t.stage === targetStage);
         const oldIndex = stageTasks.findIndex(t => t.id === activeId);
-        const newIndex = stageTasks.findIndex(t => t.id === over.id);
+        const newIndex = stageTasks.findIndex(t => t.id === overId);
 
         if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
           const reordered = arrayMove(stageTasks, oldIndex, newIndex);
@@ -133,7 +145,7 @@ export default function App() {
           try {
             const updatedTasks = await api.tasks.reorder({
               taskId: activeId,
-              overId: over.id,
+              overId: overId,
               stage: targetStage,
             });
             setTasks(updatedTasks);
@@ -147,9 +159,6 @@ export default function App() {
     }
 
     try {
-      const overId = over?.id;
-      const overTask = overId ? tasks.find(t => t.id === overId) : null;
-      
       const updatedTasks = await api.tasks.reorder({
         taskId: activeId,
         overId: overTask ? overId : null,

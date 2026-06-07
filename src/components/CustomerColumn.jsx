@@ -1,5 +1,5 @@
 import { useDroppable } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { SortableContext } from '@dnd-kit/sortable';
 import { TaskCard } from './TaskCard';
 
 export function CustomerColumn({ customer, tasks, onAddTask, onEditTask, onDeleteTask }) {
@@ -16,7 +16,7 @@ export function CustomerColumn({ customer, tasks, onAddTask, onEditTask, onDelet
         id={customer.id}
         className={`column-content ${isOver ? 'is-over' : ''}`}
       >
-        <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
+        <SortableContext items={tasks.map(t => t.id)}>
           {tasks.map(task => (
             <TaskCard
               key={task.id}
@@ -27,6 +27,9 @@ export function CustomerColumn({ customer, tasks, onAddTask, onEditTask, onDelet
             />
           ))}
         </SortableContext>
+        {tasks.length === 0 && (
+          <div className="empty-drop-zone">Перетащите задачу сюда</div>
+        )}
       </div>
     </div>
   );
