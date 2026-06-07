@@ -1,6 +1,6 @@
 import { CustomerColumn } from './CustomerColumn';
 
-export function CustomerKanbanBoard({ tasks, customers }) {
+export function CustomerKanbanBoard({ tasks, customers, onAddTask, onEditTask, onDeleteTask }) {
   return (
     <div className="board">
       {customers.map(customer => {
@@ -10,6 +10,9 @@ export function CustomerKanbanBoard({ tasks, customers }) {
             key={customer.id}
             customer={customer}
             tasks={customerTasks}
+            onAddTask={onAddTask}
+            onEditTask={onEditTask}
+            onDeleteTask={onDeleteTask}
           />
         );
       })}

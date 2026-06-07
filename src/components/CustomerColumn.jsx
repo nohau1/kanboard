@@ -2,14 +2,18 @@ import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { TaskCard } from './TaskCard';
 
-export function CustomerColumn({ customer, tasks }) {
+export function CustomerColumn({ customer, tasks, onAddTask, onEditTask, onDeleteTask }) {
   const { setNodeRef, isOver } = useDroppable({ id: customer.id });
 
   return (
     <div className="column customer-column">
-      <h2 className="column-title">{customer.name}</h2>
+      <h2 className="column-title">
+        {customer.name}
+        <button className="btn-add" onClick={() => onAddTask(customer.id, 'customer')} title="Добавить задачу">+</button>
+      </h2>
       <div
         ref={setNodeRef}
+        id={customer.id}
         className={`column-content ${isOver ? 'is-over' : ''}`}
       >
         <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
@@ -18,6 +22,8 @@ export function CustomerColumn({ customer, tasks }) {
               key={task.id}
               task={task}
               customerName={customer.name}
+              onEdit={onEditTask}
+              onDelete={onDeleteTask}
             />
           ))}
         </SortableContext>

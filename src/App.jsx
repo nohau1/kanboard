@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -15,36 +15,53 @@ import {
 import { KanbanBoard } from './components/KanbanBoard';
 import { CustomerKanbanBoard } from './components/CustomerKanbanBoard';
 import { TaskCard } from './components/TaskCard';
-import { initialTasks, initialCustomers } from './data';
+import { TaskModal } from './components/TaskModal';
+import { Login } from './components/Login';
+import { AdminPanel } from './components/AdminPanel';
+import { api } from './api';
+import { stages } from './data';
+import './App.css';
 
-const STORAGE_KEY = 'kanban-data';
-
-function loadData() {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      return JSON.parse(saved);
-    }
-  } catch (e) {
-    console.error('Failed to load data:', e);
-  }
-  return null;
-}
-
-function saveData(tasks, customers) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ tasks, customers }));
+function generateId() {
+  return 't' + Date.now();
 }
 
 export default function App() {
-  const savedData = loadData();
-  const [tasks, setTasks] = useState(savedData?.tasks || initialTasks);
-  const [customers] = useState(savedData?.customers || initialCustomers);
+  const [user, setUser] = useState(() => {
+    const saved = localStorage.getItem('user');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [tasks, setTasks] = useState([]);
+  const [customers, setCustomers] = useState([]);
   const [activeId, setActiveId] = useState(null);
   const [view, setView] = useState('stages');
+  const [modal, setModal] = useState(null);
+  const [showAdmin, setShowAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const hoverStageRef = useRef(null);
 
   useEffect(() => {
-    saveData(tasks, customers);
-  }, [tasks, customers]);
+    if (user) {
+      loadData();
+    } else {
+      setLoading(false);
+    }
+  }, [user]);
+
+  async function loadData() {
+    try {
+      const [tasksData, customersData] = await Promise.all([
+        api.tasks.list(),
+        api.customers.list(),
+      ]);
+      setTasks(tasksData);
+      setCustomers(customersData);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -59,15 +76,8 @@ export default function App() {
 
   const activeTask = activeId ? tasks.find(t => t.id === activeId) : null;
   const activeCustomer = activeTask
-    ? customers.find(c => c.id === activeTask.customerId)
+    ? customers.find(c => c.id === activeTask.customer_id)
     : null;
-
-  function findContainer(id) {
-    if (tasks.find(t => t.id === id)) {
-      return id;
-    }
-    return tasks.find(t => t.id === id)?.stage || id;
-  }
 
   function handleDragStart(event) {
     setActiveId(event.active.id);
@@ -80,73 +90,167 @@ export default function App() {
     const activeId = active.id;
     const overId = over.id;
 
-    const activeContainer = findContainer(activeId);
-    const overContainer = findContainer(overId);
+    const activeTask = tasks.find(t => t.id === activeId);
+    if (!activeTask) return;
 
-    if (activeContainer === overContainer) return;
+    const overTask = tasks.find(t => t.id === overId);
+    const newStage = overTask ? overTask.stage : overId;
+    
+    hoverStageRef.current = newStage;
 
-    setTasks(items => {
-      const activeTask = items.find(t => t.id === activeId);
-      if (!activeTask) return items;
-
-      return items.map(item => {
-        if (item.id === activeId) {
-          return { ...item, stage: overContainer };
-        }
-        return item;
-      });
-    });
+    if (activeTask.stage !== newStage) {
+      setTasks(items => items.map(item => 
+        item.id === activeId ? { ...item, stage: newStage } : item
+      ));
+    }
   }
 
-  function handleDragEnd(event) {
+  async function handleDragEnd(event) {
     const { active, over } = event;
     setActiveId(null);
 
-    if (!over) return;
-
     const activeId = active.id;
-    const overId = over.id;
+    const originalTask = tasks.find(t => t.id === activeId);
+    if (!originalTask) return;
 
-    if (activeId === overId) return;
+    const originalStage = originalTask.stage;
+    const targetStage = hoverStageRef.current || originalStage;
+    hoverStageRef.current = null;
 
-    const activeContainer = findContainer(activeId);
-    const overContainer = findContainer(overId);
+    if (originalStage === targetStage) {
+      if (over && over.id !== activeId) {
+        const stageTasks = tasks.filter(t => t.stage === targetStage);
+        const oldIndex = stageTasks.findIndex(t => t.id === activeId);
+        const newIndex = stageTasks.findIndex(t => t.id === over.id);
 
-    if (activeContainer === overContainer) {
-      setTasks(items => {
-        const containerItems = items.filter(t => t.stage === activeContainer);
-        const oldIndex = containerItems.findIndex(t => t.id === activeId);
-        const newIndex = containerItems.findIndex(t => t.id === overId);
-
-        if (oldIndex !== -1 && newIndex !== -1) {
-          const reordered = arrayMove(containerItems, oldIndex, newIndex);
-          return items.map(item => {
-            const reorderedItem = reordered.find(r => r.id === item.id);
-            return reorderedItem || item;
+        if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+          const reordered = arrayMove(stageTasks, oldIndex, newIndex);
+          setTasks(current => {
+            const otherTasks = current.filter(t => t.stage !== targetStage);
+            return [...otherTasks, ...reordered];
           });
+
+          try {
+            const updatedTasks = await api.tasks.reorder({
+              taskId: activeId,
+              overId: over.id,
+              stage: targetStage,
+            });
+            setTasks(updatedTasks);
+          } catch (err) {
+            console.error(err);
+            loadData();
+          }
         }
-        return items;
-      });
+      }
+      return;
     }
+
+    try {
+      const overId = over?.id;
+      const overTask = overId ? tasks.find(t => t.id === overId) : null;
+      
+      const updatedTasks = await api.tasks.reorder({
+        taskId: activeId,
+        overId: overTask ? overId : null,
+        stage: targetStage,
+      });
+      setTasks(updatedTasks);
+    } catch (err) {
+      console.error(err);
+      loadData();
+    }
+  }
+
+  function handleAddTask(containerId, mode = 'stage') {
+    setModal({
+      mode,
+      containerId,
+      task: null,
+    });
+  }
+
+  function handleEditTask(task) {
+    setModal({
+      mode: 'edit',
+      containerId: null,
+      task,
+    });
+  }
+
+  async function handleDeleteTask(taskId) {
+    if (!confirm('Удалить задачу?')) return;
+    try {
+      await api.tasks.delete(taskId);
+      setTasks(tasks.filter(t => t.id !== taskId));
+    } catch (err) {
+      alert(err.message);
+    }
+  }
+
+  async function handleSaveTask(data) {
+    try {
+      if (modal.mode === 'edit' && modal.task) {
+        const updated = await api.tasks.update(modal.task.id, data);
+        setTasks(tasks.map(t => t.id === updated.id ? updated : t));
+      } else if (modal.mode === 'customer') {
+        const created = await api.tasks.create({ ...data, customer_id: modal.containerId });
+        setTasks([created, ...tasks]);
+      } else {
+        const created = await api.tasks.create(data);
+        setTasks([created, ...tasks]);
+      }
+      setModal(null);
+    } catch (err) {
+      alert(err.message);
+    }
+  }
+
+  function handleLogout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
+    setTasks([]);
+    setCustomers([]);
+  }
+
+  if (!user) {
+    return <Login onLogin={setUser} />;
+  }
+
+  if (loading) {
+    return <div className="loading">Загрузка...</div>;
   }
 
   return (
     <div className="app">
       <header className="header">
         <h1>Канбан-доска</h1>
-        <div className="view-switcher">
-          <button
-            className={view === 'stages' ? 'active' : ''}
-            onClick={() => setView('stages')}
-          >
-            По стадиям
+        <div className="header-actions">
+          <div className="view-switcher">
+            <button
+              className={view === 'stages' ? 'active' : ''}
+              onClick={() => setView('stages')}
+            >
+              По стадиям
+            </button>
+            <button
+              className={view === 'customers' ? 'active' : ''}
+              onClick={() => setView('customers')}
+            >
+              По заказчикам
+            </button>
+          </div>
+          <button className="btn-add-header" onClick={() => handleAddTask('todo', 'stage')}>
+            + Новая задача
           </button>
-          <button
-            className={view === 'customers' ? 'active' : ''}
-            onClick={() => setView('customers')}
-          >
-            По заказчикам
-          </button>
+          <div className="user-menu">
+            <span className="username">{user.username}</span>
+            {user.role === 'admin' && (
+              <button className="btn-admin" onClick={() => setShowAdmin(true)}>Админ</button>
+            )}
+            <button className="btn-logout" onClick={handleLogout}>Выход</button>
+          </div>
         </div>
       </header>
 
@@ -158,9 +262,21 @@ export default function App() {
         onDragEnd={handleDragEnd}
       >
         {view === 'stages' ? (
-          <KanbanBoard tasks={tasks} customers={customers} />
+          <KanbanBoard
+            tasks={tasks}
+            customers={customers}
+            onAddTask={handleAddTask}
+            onEditTask={handleEditTask}
+            onDeleteTask={handleDeleteTask}
+          />
         ) : (
-          <CustomerKanbanBoard tasks={tasks} customers={customers} />
+          <CustomerKanbanBoard
+            tasks={tasks}
+            customers={customers}
+            onAddTask={handleAddTask}
+            onEditTask={handleEditTask}
+            onDeleteTask={handleDeleteTask}
+          />
         )}
 
         <DragOverlay>
@@ -169,6 +285,18 @@ export default function App() {
           ) : null}
         </DragOverlay>
       </DndContext>
+
+      {modal && (
+        <TaskModal
+          task={modal.task}
+          customers={customers}
+          stages={stages}
+          onSave={handleSaveTask}
+          onClose={() => setModal(null)}
+        />
+      )}
+
+      {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} />}
     </div>
   );
 }

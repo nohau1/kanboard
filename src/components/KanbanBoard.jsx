@@ -1,7 +1,7 @@
 import { Column } from './Column';
 import { stages } from '../data';
 
-export function KanbanBoard({ tasks, customers }) {
+export function KanbanBoard({ tasks, customers, onAddTask, onEditTask, onDeleteTask }) {
   return (
     <div className="board">
       {stages.map(stage => {
@@ -13,6 +13,9 @@ export function KanbanBoard({ tasks, customers }) {
             title={stage.title}
             tasks={stageTasks}
             customers={customers}
+            onAddTask={onAddTask}
+            onEditTask={onEditTask}
+            onDeleteTask={onDeleteTask}
           />
         );
       })}
