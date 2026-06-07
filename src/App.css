@@ -109,6 +109,40 @@ body {
   margin-top: 8px;
 }
 
+.stage-filter {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  background: white;
+  border-radius: 8px;
+}
+
+.stage-filter span {
+  font-size: 14px;
+  color: #666;
+}
+
+.stage-filter label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.stage-filter input[type="checkbox"] {
+  cursor: pointer;
+}
+
+.customer-board .board {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 20px;
+}
+
 .customer-column .column-title {
   background: #f5f5f5;
   border-radius: 8px 8px 0 0;
