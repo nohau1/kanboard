@@ -2,6 +2,13 @@ import { useDroppable } from '@dnd-kit/core';
 import { SortableContext } from '@dnd-kit/sortable';
 import { TaskCard } from './TaskCard';
 
+const STAGE_TITLES = {
+  'todo': 'К выполнению',
+  'in-progress': 'В работе',
+  'testing': 'Тестирование',
+  'done': 'Готово',
+};
+
 export function CustomerColumn({ customer, tasks, onAddTask, onEditTask, onDeleteTask }) {
   const { setNodeRef, isOver } = useDroppable({ id: customer.id });
 
@@ -21,7 +28,7 @@ export function CustomerColumn({ customer, tasks, onAddTask, onEditTask, onDelet
             <TaskCard
               key={task.id}
               task={task}
-              customerName={customer.name}
+              customerName={STAGE_TITLES[task.stage] || task.stage}
               onEdit={onEditTask}
               onDelete={onDeleteTask}
             />
