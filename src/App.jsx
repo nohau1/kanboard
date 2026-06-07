@@ -34,7 +34,10 @@ export default function App() {
   const [tasks, setTasks] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [activeId, setActiveId] = useState(null);
-  const [view, setView] = useState('stages');
+  const [view, setView] = useState(() => {
+    const hash = window.location.hash.replace('#', '');
+    return hash === 'customers' ? 'customers' : 'stages';
+  });
   const [modal, setModal] = useState(null);
   const [showAdmin, setShowAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -46,6 +49,13 @@ export default function App() {
     } else {
       setLoading(false);
     }
+
+    function handleHashChange() {
+      const hash = window.location.hash.replace('#', '');
+      setView(hash === 'customers' ? 'customers' : 'stages');
+    }
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
   }, [user]);
 
   async function loadData() {
@@ -239,13 +249,19 @@ export default function App() {
           <div className="view-switcher">
             <button
               className={view === 'stages' ? 'active' : ''}
-              onClick={() => setView('stages')}
+              onClick={() => {
+                setView('stages');
+                window.location.hash = 'stages';
+              }}
             >
               По стадиям
             </button>
             <button
               className={view === 'customers' ? 'active' : ''}
-              onClick={() => setView('customers')}
+              onClick={() => {
+                setView('customers');
+                window.location.hash = 'customers';
+              }}
             >
               По заказчикам
             </button>

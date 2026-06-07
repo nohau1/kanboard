@@ -4,7 +4,7 @@ export function CustomerKanbanBoard({ tasks, customers, onAddTask, onEditTask, o
   return (
     <div className="board">
       {customers.map(customer => {
-        const customerTasks = tasks.filter(t => t.customerId === customer.id);
+        const customerTasks = tasks.filter(t => t.customer_id === customer.id);
         return (
           <CustomerColumn
             key={customer.id}
