@@ -9,7 +9,7 @@ export function Column({ id, title, tasks, customers, onAddTask, onEditTask, onD
     <div className="column">
       <h2 className="column-title">
         {title}
-        <button className="btn-add" onClick={() => onAddTask(id)} title="Добавить задачу">+</button>
+        <a href="#" className="btn-add" onClick={(e) => { e.preventDefault(); onAddTask(id); }} title="Добавить задачу">+</a>
       </h2>
       <div
         ref={setNodeRef}
