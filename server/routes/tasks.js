@@ -30,7 +30,7 @@ router.get('/', (req, res) => {
 });
 
 router.post('/', (req, res) => {
-  const { title, stage, customer_id, position } = req.body;
+  const { title, stage, customer_id, position, due_date } = req.body;
   
   if (!title || !customer_id) {
     return res.status(400).json({ error: 'Укажите название и заказчика' });
@@ -51,10 +51,10 @@ router.post('/', (req, res) => {
   const newPosition = position !== undefined ? position : maxPos.pos;
 
   const id = 't' + Date.now();
-  const stmt = db.prepare('INSERT INTO tasks (id, title, stage, customer_id, user_id, position) VALUES (?, ?, ?, ?, ?, ?)');
+  const stmt = db.prepare('INSERT INTO tasks (id, title, stage, customer_id, user_id, position, due_date) VALUES (?, ?, ?, ?, ?, ?, ?)');
   
   try {
-    stmt.run(id, title, stageOrder, customer_id, req.user.id, newPosition);
+    stmt.run(id, title, stageOrder, customer_id, req.user.id, newPosition, due_date || null);
     const task = db.prepare('SELECT t.*, c.name as customer_name FROM tasks t LEFT JOIN customers c ON t.customer_id = c.id WHERE t.id = ?').get(id);
     res.status(201).json(task);
   } catch (err) {
@@ -64,7 +64,7 @@ router.post('/', (req, res) => {
 
 router.put('/:id', (req, res) => {
   const { id } = req.params;
-  const { title, stage, customer_id, position } = req.body;
+  const { title, stage, customer_id, position, due_date } = req.body;
   
   const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
   
@@ -85,10 +85,10 @@ router.put('/:id', (req, res) => {
   const newStage = stage !== undefined ? stage : task.stage;
   const newPosition = position !== undefined ? position : task.position;
 
-  const stmt = db.prepare('UPDATE tasks SET title = ?, stage = ?, customer_id = ?, position = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?');
+  const stmt = db.prepare('UPDATE tasks SET title = ?, stage = ?, customer_id = ?, position = ?, due_date = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?');
   
   try {
-    stmt.run(title || task.title, newStage, customer_id || task.customer_id, newPosition, id);
+    stmt.run(title || task.title, newStage, customer_id || task.customer_id, newPosition, due_date !== undefined ? due_date : task.due_date, id);
     
     if (newStage !== task.stage || position !== undefined) {
       db.prepare('UPDATE tasks SET position = position + 1 WHERE stage = ? AND position >= ? AND id != ?')

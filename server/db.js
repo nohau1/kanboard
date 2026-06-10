@@ -36,6 +36,7 @@ db.exec(`
     customer_id TEXT NOT NULL,
     user_id TEXT,
     position INTEGER DEFAULT 0,
+    due_date TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
@@ -61,15 +62,15 @@ if (customersExist.length === 0) {
 
 const tasksExist = db.prepare('SELECT id FROM tasks').all();
 if (tasksExist.length === 0) {
-  const insertTask = db.prepare('INSERT INTO tasks (id, title, stage, customer_id) VALUES (?, ?, ?, ?)');
-  insertTask.run('t1', 'Дизайн главной страницы', 'todo', 'c1');
-  insertTask.run('t2', 'Настройка сервера', 'todo', 'c2');
-  insertTask.run('t3', 'Интеграция API', 'in-progress', 'c1');
-  insertTask.run('t4', 'Тестирование модуля', 'testing', 'c3');
-  insertTask.run('t5', 'Документация', 'done', 'c2');
-  insertTask.run('t6', 'Исправление багов', 'done', 'c1');
-  insertTask.run('t7', 'Оптимизация БД', 'todo', 'c3');
-  insertTask.run('t8', 'Деплой на prod', 'testing', 'c2');
+  const insertTask = db.prepare('INSERT INTO tasks (id, title, stage, customer_id, due_date) VALUES (?, ?, ?, ?, ?)');
+  insertTask.run('t1', 'Дизайн главной страницы', 'todo', 'c1', '2026-06-15T14:00');
+  insertTask.run('t2', 'Настройка сервера', 'todo', 'c2', '2026-06-12T10:00');
+  insertTask.run('t3', 'Интеграция API', 'in-progress', 'c1', '2026-06-14T16:00');
+  insertTask.run('t4', 'Тестирование модуля', 'testing', 'c3', '2026-06-16T12:00');
+  insertTask.run('t5', 'Документация', 'done', 'c2', '2026-06-10T18:00');
+  insertTask.run('t6', 'Исправление багов', 'done', 'c1', '2026-06-11T09:00');
+  insertTask.run('t7', 'Оптимизация БД', 'todo', 'c3', '2026-06-18T15:00');
+  insertTask.run('t8', 'Деплой на prod', 'testing', 'c2', '2026-06-17T11:00');
 }
 
 export default db;

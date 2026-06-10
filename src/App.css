@@ -216,6 +216,16 @@ body {
   color: #999;
 }
 
+.task-due-date {
+  font-size: 11px;
+  color: #666;
+  margin-top: 4px;
+}
+
+.task-due-date.overdue {
+  color: #ff4d4f;
+}
+
 .task-actions {
   display: none;
   gap: 4px;
@@ -407,5 +417,203 @@ body {
   .header-actions {
     flex-direction: column;
     align-items: stretch;
+  }
+}
+
+.calendar {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid #f0f0f0;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.calendar-nav {
+  display: flex;
+  gap: 8px;
+}
+
+.calendar-nav button {
+  padding: 6px 12px;
+  border: 1px solid #d9d9d9;
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.calendar-nav button:hover {
+  color: #1890ff;
+  border-color: #1890ff;
+}
+
+.calendar-title {
+  margin: 0;
+  font-size: 18px;
+  color: #333;
+  text-transform: capitalize;
+}
+
+.calendar-views {
+  display: flex;
+  gap: 4px;
+}
+
+.calendar-views button {
+  padding: 6px 12px;
+  border: 1px solid #d9d9d9;
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.calendar-views button.active {
+  background: #1890ff;
+  border-color: #1890ff;
+  color: white;
+}
+
+.calendar-grid {
+  padding: 16px;
+}
+
+.calendar-grid.day .calendar-days {
+  display: block;
+}
+
+.calendar-grid.week .calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.calendar-grid.month .calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 8px;
+}
+
+.weekday {
+  text-align: center;
+  font-weight: 500;
+  color: #666;
+  padding: 8px;
+  font-size: 13px;
+}
+
+.calendar-day {
+  min-height: 100px;
+  border: 1px solid #f0f0f0;
+  padding: 8px;
+}
+
+.calendar-grid.day .calendar-day {
+  min-height: 400px;
+}
+
+.calendar-grid.month .calendar-day {
+  min-height: 80px;
+  font-size: 13px;
+}
+
+.calendar-day.today {
+  background: #e6f7ff;
+}
+
+.calendar-day.other-month {
+  background: #fafafa;
+  color: #ccc;
+}
+
+.day-header {
+  margin-bottom: 8px;
+}
+
+.day-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-weight: 500;
+}
+
+.calendar-day.today .day-number {
+  background: #1890ff;
+  color: white;
+}
+
+.day-tasks {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.calendar-task {
+  background: #fafafa;
+  border-left: 3px solid;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: baseline;
+}
+
+.calendar-task:hover {
+  background: #f0f0f0;
+}
+
+.calendar-grid.month .calendar-task {
+  flex-direction: column;
+  padding: 2px 4px;
+}
+
+.task-time {
+  color: #666;
+  font-size: 11px;
+}
+
+.task-title {
+  font-weight: 500;
+  color: #333;
+  flex: 1;
+}
+
+.task-customer {
+  color: #999;
+  font-size: 11px;
+}
+
+.no-tasks {
+  color: #ccc;
+  text-align: center;
+  padding: 20px;
+}
+
+@media (max-width: 768px) {
+  .calendar-grid.week .calendar-days,
+  .calendar-grid.month .calendar-days {
+    grid-template-columns: repeat(7, 1fr);
+  }
+  
+  .calendar-day {
+    min-height: 60px;
+    padding: 4px;
   }
 }

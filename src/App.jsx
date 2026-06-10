@@ -18,6 +18,7 @@ import { TaskCard } from './components/TaskCard';
 import { TaskModal } from './components/TaskModal';
 import { Login } from './components/Login';
 import { AdminPanel } from './components/AdminPanel';
+import { Calendar } from './components/Calendar';
 import { api } from './api';
 import { stages } from './data';
 import './App.css';
@@ -36,7 +37,9 @@ export default function App() {
   const [activeId, setActiveId] = useState(null);
   const [view, setView] = useState(() => {
     const hash = window.location.hash.replace('#', '');
-    return hash === 'customers' ? 'customers' : 'stages';
+    if (hash === 'customers') return 'customers';
+    if (hash === 'calendar') return 'calendar';
+    return 'stages';
   });
   const [modal, setModal] = useState(null);
   const [showAdmin, setShowAdmin] = useState(false);
@@ -52,7 +55,9 @@ export default function App() {
 
     function handleHashChange() {
       const hash = window.location.hash.replace('#', '');
-      setView(hash === 'customers' ? 'customers' : 'stages');
+      if (hash === 'customers') setView('customers');
+      else if (hash === 'calendar') setView('calendar');
+      else setView('stages');
     }
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
@@ -265,6 +270,15 @@ export default function App() {
             >
               По заказчикам
             </button>
+            <button
+              className={view === 'calendar' ? 'active' : ''}
+              onClick={() => {
+                setView('calendar');
+                window.location.hash = 'calendar';
+              }}
+            >
+              Календарь
+            </button>
           </div>
           <button className="btn-add-header" onClick={() => handleAddTask('todo', 'stage')}>
             + Новая задача
@@ -279,37 +293,45 @@ export default function App() {
         </div>
       </header>
 
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCorners}
-        onDragStart={handleDragStart}
-        onDragOver={handleDragOver}
-        onDragEnd={handleDragEnd}
-      >
-        {view === 'stages' ? (
-          <KanbanBoard
+      {view === 'calendar' ? (
+          <Calendar
             tasks={tasks}
             customers={customers}
-            onAddTask={handleAddTask}
             onEditTask={handleEditTask}
-            onDeleteTask={handleDeleteTask}
           />
         ) : (
-          <CustomerKanbanBoard
-            tasks={tasks}
-            customers={customers}
-            onAddTask={handleAddTask}
-            onEditTask={handleEditTask}
-            onDeleteTask={handleDeleteTask}
-          />
-        )}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCorners}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+          >
+            {view === 'stages' ? (
+              <KanbanBoard
+                tasks={tasks}
+                customers={customers}
+                onAddTask={handleAddTask}
+                onEditTask={handleEditTask}
+                onDeleteTask={handleDeleteTask}
+              />
+            ) : (
+              <CustomerKanbanBoard
+                tasks={tasks}
+                customers={customers}
+                onAddTask={handleAddTask}
+                onEditTask={handleEditTask}
+                onDeleteTask={handleDeleteTask}
+              />
+            )}
 
-        <DragOverlay>
-          {activeTask ? (
-            <TaskCard task={activeTask} customerName={activeCustomer?.name || ''} />
-          ) : null}
-        </DragOverlay>
-      </DndContext>
+            <DragOverlay>
+              {activeTask ? (
+                <TaskCard task={activeTask} customerName={activeCustomer?.name || ''} />
+              ) : null}
+            </DragOverlay>
+          </DndContext>
+        )}
 
       {modal && (
         <TaskModal

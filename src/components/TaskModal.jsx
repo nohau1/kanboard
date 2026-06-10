@@ -4,16 +4,19 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
   const [title, setTitle] = useState('');
   const [customerId, setCustomerId] = useState('');
   const [stage, setStage] = useState('todo');
+  const [dueDate, setDueDate] = useState('');
 
   useEffect(() => {
     if (task) {
       setTitle(task.title);
       setCustomerId(task.customer_id);
       setStage(task.stage);
+      setDueDate(task.due_date || '');
     } else {
       setTitle('');
       setCustomerId(initialCustomer || customers[0]?.id || '');
       setStage(initialStage || stages[0]?.id || 'todo');
+      setDueDate('');
     }
   }, [task, customers, stages, initialStage, initialCustomer]);
 
@@ -25,6 +28,7 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
       title: title.trim(),
       customer_id: customerId,
       stage,
+      due_date: dueDate || null,
     });
   }
 
@@ -57,6 +61,14 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
                 <option key={s.id} value={s.id}>{s.title}</option>
               ))}
             </select>
+          </div>
+          <div className="form-group">
+            <label>Срок исполнения</label>
+            <input
+              type="datetime-local"
+              value={dueDate}
+              onChange={e => setDueDate(e.target.value)}
+            />
           </div>
           <div className="modal-actions">
             <button type="button" className="btn-cancel" onClick={onClose}>Отмена</button>

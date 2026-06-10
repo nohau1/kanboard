@@ -1,6 +1,19 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
+function formatDueDate(dateStr) {
+  if (!dateStr) return null;
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diff = date - now;
+  const isOverdue = diff < 0 && date.toDateString() !== now.toDateString();
+  
+  return {
+    text: date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }),
+    isOverdue,
+  };
+}
+
 export function TaskCard({ task, customerName, onEdit, onDelete }) {
   const {
     attributes,
@@ -16,6 +29,8 @@ export function TaskCard({ task, customerName, onEdit, onDelete }) {
     transition,
     opacity: isDragging ? 0.5 : 1,
   };
+
+  const dueDate = formatDueDate(task.due_date);
 
   function handleEdit(e) {
     e.stopPropagation();
@@ -34,6 +49,11 @@ export function TaskCard({ task, customerName, onEdit, onDelete }) {
       <div className="task-content">
         <div className="task-title">{task.title}</div>
         <div className="task-customer">{customerName || task.customer_name}</div>
+        {dueDate && (
+          <div className={`task-due-date ${dueDate.isOverdue ? 'overdue' : ''}`}>
+            📅 {dueDate.text}
+          </div>
+        )}
       </div>
       <div className="task-actions">
         <button className="btn-icon" onClick={handleEdit} title="Редактировать">✎</button>
