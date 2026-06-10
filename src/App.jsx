@@ -316,6 +316,7 @@ export default function App() {
           task={modal.task}
           customers={customers}
           stages={stages}
+          initialStage={modal.mode === 'stage' ? modal.containerId : null}
           onSave={handleSaveTask}
           onClose={() => setModal(null)}
         />
