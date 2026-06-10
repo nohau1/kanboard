@@ -59,11 +59,7 @@ function getMonthDates(date) {
   return dates;
 }
 
-export function Calendar({ tasks, customers, onEditTask }) {
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [view, setView] = useState('week');
-
-  function parseLocalDate(dateStr) {
+function parseLocalDate(dateStr) {
   if (!dateStr) return null;
   const [datePart, timePart] = dateStr.split(' ');
   const [year, month, day] = datePart.split('-').map(Number);
@@ -71,25 +67,29 @@ export function Calendar({ tasks, customers, onEditTask }) {
   return new Date(year, month - 1, day, hours, minutes);
 }
 
-const tasksByDate = useMemo(() => {
-  const map = {};
-  tasks.forEach(task => {
-    if (!task.due_date) return;
-    const date = parseLocalDate(task.due_date);
-    if (!date || isNaN(date.getTime())) return;
-    const key = date.toDateString();
-    if (!map[key]) map[key] = [];
-    map[key].push(task);
-  });
-  Object.keys(map).forEach(key => {
-    map[key].sort((a, b) => {
-      const dateA = parseLocalDate(a.due_date);
-      const dateB = parseLocalDate(b.due_date);
-      return dateA - dateB;
+export function Calendar({ tasks, customers, onEditTask }) {
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [view, setView] = useState('week');
+
+  const tasksByDate = useMemo(() => {
+    const map = {};
+    tasks.forEach(task => {
+      if (!task.due_date) return;
+      const date = parseLocalDate(task.due_date);
+      if (!date || isNaN(date.getTime())) return;
+      const key = date.toDateString();
+      if (!map[key]) map[key] = [];
+      map[key].push(task);
     });
-  });
-  return map;
-}, [tasks]);
+    Object.keys(map).forEach(key => {
+      map[key].sort((a, b) => {
+        const dateA = parseLocalDate(a.due_date);
+        const dateB = parseLocalDate(b.due_date);
+        return dateA - dateB;
+      });
+    });
+    return map;
+  }, [tasks]);
 
   function navigate(direction) {
     const newDate = new Date(currentDate);
