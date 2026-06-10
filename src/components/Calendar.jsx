@@ -61,9 +61,13 @@ function getMonthDates(date) {
 
 function parseLocalDate(dateStr) {
   if (!dateStr) return null;
-  const [datePart, timePart] = dateStr.split(' ');
+  const parts = dateStr.split(' ');
+  const datePart = parts[0];
+  const timePart = parts[1];
+  if (!datePart) return null;
   const [year, month, day] = datePart.split('-').map(Number);
-  const [hours, minutes] = timePart.split(':').map(Number);
+  const hours = timePart ? parseInt(timePart.split(':')[0], 10) : 0;
+  const minutes = timePart ? parseInt(timePart.split(':')[1], 10) : 0;
   return new Date(year, month - 1, day, hours, minutes);
 }
 
