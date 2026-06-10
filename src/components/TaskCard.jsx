@@ -3,8 +3,14 @@ import { CSS } from '@dnd-kit/utilities';
 
 function formatDueDate(dateStr) {
   if (!dateStr) return null;
-  const date = new Date(dateStr.replace(' ', 'T'));
+  
+  const [datePart, timePart] = dateStr.split(' ');
+  const [year, month, day] = datePart.split('-').map(Number);
+  const [hours, minutes] = timePart.split(':').map(Number);
+  
+  const date = new Date(year, month - 1, day, hours, minutes);
   if (isNaN(date.getTime())) return null;
+  
   const now = new Date();
   const diff = date - now;
   const isOverdue = diff < 0 && date.toDateString() !== now.toDateString();

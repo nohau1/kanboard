@@ -13,7 +13,7 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
       setTitle(task.title);
       setCustomerId(task.customer_id);
       setStage(task.stage);
-      setDueDate(task.due_date ? task.due_date.replace(' ', 'T').substring(0, 16) : '');
+      setDueDate(task.due_date ? task.due_date.substring(0, 16) : '');
       setCost(task.cost || '');
       setHours(task.hours || '');
     } else {

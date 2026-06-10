@@ -63,21 +63,33 @@ export function Calendar({ tasks, customers, onEditTask }) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState('week');
 
-  const tasksByDate = useMemo(() => {
-    const map = {};
-    tasks.forEach(task => {
-      if (!task.due_date) return;
-      const date = new Date(task.due_date.replace(' ', 'T'));
-      if (isNaN(date.getTime())) return;
-      const key = date.toDateString();
-      if (!map[key]) map[key] = [];
-      map[key].push(task);
+  function parseLocalDate(dateStr) {
+  if (!dateStr) return null;
+  const [datePart, timePart] = dateStr.split(' ');
+  const [year, month, day] = datePart.split('-').map(Number);
+  const [hours, minutes] = timePart.split(':').map(Number);
+  return new Date(year, month - 1, day, hours, minutes);
+}
+
+const tasksByDate = useMemo(() => {
+  const map = {};
+  tasks.forEach(task => {
+    if (!task.due_date) return;
+    const date = parseLocalDate(task.due_date);
+    if (!date || isNaN(date.getTime())) return;
+    const key = date.toDateString();
+    if (!map[key]) map[key] = [];
+    map[key].push(task);
+  });
+  Object.keys(map).forEach(key => {
+    map[key].sort((a, b) => {
+      const dateA = parseLocalDate(a.due_date);
+      const dateB = parseLocalDate(b.due_date);
+      return dateA - dateB;
     });
-    Object.keys(map).forEach(key => {
-      map[key].sort((a, b) => new Date(a.due_date.replace(' ', 'T')) - new Date(b.due_date.replace(' ', 'T')));
-    });
-    return map;
-  }, [tasks]);
+  });
+  return map;
+}, [tasks]);
 
   function navigate(direction) {
     const newDate = new Date(currentDate);
@@ -199,7 +211,7 @@ export function Calendar({ tasks, customers, onEditTask }) {
                       onClick={() => onEditTask(task)}
                     >
                       {view !== 'month' && (
-                        <span className="task-time">{formatTime(new Date(task.due_date.replace(' ', 'T')))}</span>
+                        <span className="task-time">{formatTime(parseLocalDate(task.due_date))}</span>
                       )}
                       <span className="task-title">{task.title}</span>
                       {view !== 'month' && (
