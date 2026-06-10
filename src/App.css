@@ -156,6 +156,7 @@ body {
   cursor: pointer;
   padding: 0 8px;
   line-height: 1;
+  text-decoration: none;
 }
 
 .btn-add:hover {
