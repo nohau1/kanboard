@@ -9,7 +9,7 @@ const STAGE_TITLES = {
   'done': 'Готово',
 };
 
-export function CustomerColumn({ customer, tasks, onAddTask, onEditTask, onDeleteTask }) {
+export function CustomerColumn({ customer, tasks, total, onAddTask, onEditTask, onDeleteTask }) {
   const { setNodeRef, isOver } = useDroppable({ id: customer.id });
 
   return (
@@ -18,6 +18,7 @@ export function CustomerColumn({ customer, tasks, onAddTask, onEditTask, onDelet
         {customer.name}
         &nbsp;<a href="#" className="link" onClick={(e) => { e.preventDefault(); onAddTask(customer.id, 'customer'); }} title="Добавить задачу">+</a>
       </h2>
+      {total && <div className="column-total">{total}</div>}
       <div
         ref={setNodeRef}
         id={customer.id}

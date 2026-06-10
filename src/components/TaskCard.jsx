@@ -54,6 +54,12 @@ export function TaskCard({ task, customerName, onEdit, onDelete }) {
             📅 {dueDate.text}
           </div>
         )}
+        {(task.cost > 0 || task.hours > 0) && (
+          <div className="task-stats">
+            {task.cost > 0 && <span>{parseFloat(task.cost).toLocaleString('ru-RU')} ₽</span>}
+            {task.hours > 0 && <span>{parseFloat(task.hours).toFixed(1)} ч</span>}
+          </div>
+        )}
       </div>
       <div className="task-actions">
         <button className="btn-icon" onClick={handleEdit} title="Редактировать">✎</button>

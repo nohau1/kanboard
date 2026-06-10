@@ -35,7 +35,7 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-  const { title, stage, customer_id, position, due_date } = req.body;
+  const { title, stage, customer_id, position, due_date, cost, hours } = req.body;
   
   if (!title || !customer_id) {
     return res.status(400).json({ error: 'Укажите название и заказчика' });
@@ -63,8 +63,8 @@ router.post('/', async (req, res) => {
   
   try {
     await pool.execute(
-      'INSERT INTO tasks (id, title, stage, customer_id, user_id, position, due_date) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [id, title, stageOrder, customer_id, req.user.id, newPosition, due_date || null]
+      'INSERT INTO tasks (id, title, stage, customer_id, user_id, position, due_date, cost, hours) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [id, title, stageOrder, customer_id, req.user.id, newPosition, due_date || null, cost || 0, hours || 0]
     );
     
     const [rows] = await pool.execute(
@@ -81,7 +81,7 @@ router.post('/', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
-  const { title, stage, customer_id, position, due_date } = req.body;
+  const { title, stage, customer_id, position, due_date, cost, hours } = req.body;
   
   try {
     const [taskRows] = await pool.execute('SELECT * FROM tasks WHERE id = ?', [id]);
@@ -106,8 +106,8 @@ router.put('/:id', async (req, res) => {
     const newPosition = position !== undefined ? position : task.position;
 
     await pool.execute(
-      'UPDATE tasks SET title = ?, stage = ?, customer_id = ?, position = ?, due_date = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-      [title || task.title, newStage, customer_id || task.customer_id, newPosition, due_date !== undefined ? due_date : task.due_date, id]
+      'UPDATE tasks SET title = ?, stage = ?, customer_id = ?, position = ?, due_date = ?, cost = ?, hours = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      [title || task.title, newStage, customer_id || task.customer_id, newPosition, due_date !== undefined ? due_date : task.due_date, cost !== undefined ? cost : task.cost, hours !== undefined ? hours : task.hours, id]
     );
     
     if (newStage !== task.stage || position !== undefined) {

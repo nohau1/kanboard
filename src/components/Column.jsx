@@ -2,7 +2,7 @@ import { useDroppable } from '@dnd-kit/core';
 import { SortableContext } from '@dnd-kit/sortable';
 import { TaskCard } from './TaskCard';
 
-export function Column({ id, title, tasks, customers, onAddTask, onEditTask, onDeleteTask }) {
+export function Column({ id, title, tasks, customers, total, onAddTask, onEditTask, onDeleteTask }) {
   const { setNodeRef, isOver } = useDroppable({ id });
 
   return (
@@ -11,6 +11,7 @@ export function Column({ id, title, tasks, customers, onAddTask, onEditTask, onD
         {title}
         &nbsp;<a href="#" className="link" onClick={(e) => { e.preventDefault(); onAddTask(id); }} title="Добавить задачу">+</a>
       </h2>
+      {total && <div className="column-total">{total}</div>}
       <div
         ref={setNodeRef}
         id={id}

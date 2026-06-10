@@ -39,11 +39,16 @@ export function CustomerKanbanBoard({ tasks, customers, onAddTask, onEditTask, o
       <div className="board">
         {customers.map(customer => {
           const customerTasks = sortedTasks.filter(t => t.customer_id === customer.id);
+          const totalCost = customerTasks.reduce((sum, t) => sum + (parseFloat(t.cost) || 0), 0);
+          const totalHours = customerTasks.reduce((sum, t) => sum + (parseFloat(t.hours) || 0), 0);
+          const total = totalCost.toLocaleString('ru-RU') + ' ₽ | ' + totalHours.toFixed(1) + ' ч';
+          
           return (
             <CustomerColumn
               key={customer.id}
               customer={customer}
               tasks={customerTasks}
+              total={total}
               onAddTask={onAddTask}
               onEditTask={onEditTask}
               onDeleteTask={onDeleteTask}

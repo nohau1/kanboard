@@ -5,6 +5,8 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
   const [customerId, setCustomerId] = useState('');
   const [stage, setStage] = useState('todo');
   const [dueDate, setDueDate] = useState('');
+  const [cost, setCost] = useState('');
+  const [hours, setHours] = useState('');
 
   useEffect(() => {
     if (task) {
@@ -12,11 +14,15 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
       setCustomerId(task.customer_id);
       setStage(task.stage);
       setDueDate(task.due_date || '');
+      setCost(task.cost || '');
+      setHours(task.hours || '');
     } else {
       setTitle('');
       setCustomerId(initialCustomer || customers[0]?.id || '');
       setStage(initialStage || stages[0]?.id || 'todo');
       setDueDate('');
+      setCost('');
+      setHours('');
     }
   }, [task, customers, stages, initialStage, initialCustomer]);
 
@@ -29,6 +35,8 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
       customer_id: customerId,
       stage,
       due_date: dueDate || null,
+      cost: cost ? parseFloat(cost) : 0,
+      hours: hours ? parseFloat(hours) : 0,
     });
   }
 
@@ -69,6 +77,28 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
               value={dueDate}
               onChange={e => setDueDate(e.target.value)}
             />
+          </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label>Стоимость</label>
+              <input
+                type="number"
+                step="0.01"
+                value={cost}
+                onChange={e => setCost(e.target.value)}
+                placeholder="0.00"
+              />
+            </div>
+            <div className="form-group">
+              <label>Часы</label>
+              <input
+                type="number"
+                step="0.5"
+                value={hours}
+                onChange={e => setHours(e.target.value)}
+                placeholder="0"
+              />
+            </div>
           </div>
           <div className="modal-actions">
             <button type="button" className="btn-cancel" onClick={onClose}>Отмена</button>

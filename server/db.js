@@ -51,6 +51,8 @@ async function initDb() {
         user_id VARCHAR(50),
         position INT DEFAULT 0,
         due_date DATETIME,
+        cost DECIMAL(12,2) DEFAULT 0,
+        hours DECIMAL(8,2) DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
@@ -62,6 +64,18 @@ async function initDb() {
       await connection.execute('ALTER TABLE tasks ADD COLUMN due_date DATETIME');
     } catch (e) {
       if (!e.message.includes('Duplicate')) console.log('due_date column check done');
+    }
+
+    try {
+      await connection.execute('ALTER TABLE tasks ADD COLUMN cost DECIMAL(12,2) DEFAULT 0');
+    } catch (e) {
+      if (!e.message.includes('Duplicate')) console.log('cost column check done');
+    }
+
+    try {
+      await connection.execute('ALTER TABLE tasks ADD COLUMN hours DECIMAL(8,2) DEFAULT 0');
+    } catch (e) {
+      if (!e.message.includes('Duplicate')) console.log('hours column check done');
     }
 
     const [admins] = await connection.execute('SELECT id FROM users WHERE role = ?', ['admin']);
@@ -83,36 +97,36 @@ async function initDb() {
     const [tasks] = await connection.execute('SELECT id FROM tasks');
     if (tasks.length === 0) {
       await connection.execute(
-        "INSERT INTO tasks (id, title, stage, customer_id, due_date) VALUES (?, ?, ?, ?, ?)",
-        ['t1', 'Дизайн главной страницы', 'todo', 'c1', '2026-06-15 14:00:00']
+        "INSERT INTO tasks (id, title, stage, customer_id, due_date, cost, hours) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        ['t1', 'Дизайн главной страницы', 'todo', 'c1', '2026-06-15 14:00:00', 50000, 40]
       );
       await connection.execute(
-        "INSERT INTO tasks (id, title, stage, customer_id, due_date) VALUES (?, ?, ?, ?, ?)",
-        ['t2', 'Настройка сервера', 'todo', 'c2', '2026-06-12 10:00:00']
+        "INSERT INTO tasks (id, title, stage, customer_id, due_date, cost, hours) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        ['t2', 'Настройка сервера', 'todo', 'c2', '2026-06-12 10:00:00', 25000, 16]
       );
       await connection.execute(
-        "INSERT INTO tasks (id, title, stage, customer_id, due_date) VALUES (?, ?, ?, ?, ?)",
-        ['t3', 'Интеграция API', 'in-progress', 'c1', '2026-06-14 16:00:00']
+        "INSERT INTO tasks (id, title, stage, customer_id, due_date, cost, hours) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        ['t3', 'Интеграция API', 'in-progress', 'c1', '2026-06-14 16:00:00', 80000, 60]
       );
       await connection.execute(
-        "INSERT INTO tasks (id, title, stage, customer_id, due_date) VALUES (?, ?, ?, ?, ?)",
-        ['t4', 'Тестирование модуля', 'testing', 'c3', '2026-06-16 12:00:00']
+        "INSERT INTO tasks (id, title, stage, customer_id, due_date, cost, hours) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        ['t4', 'Тестирование модуля', 'testing', 'c3', '2026-06-16 12:00:00', 30000, 24]
       );
       await connection.execute(
-        "INSERT INTO tasks (id, title, stage, customer_id, due_date) VALUES (?, ?, ?, ?, ?)",
-        ['t5', 'Документация', 'done', 'c2', '2026-06-10 18:00:00']
+        "INSERT INTO tasks (id, title, stage, customer_id, due_date, cost, hours) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        ['t5', 'Документация', 'done', 'c2', '2026-06-10 18:00:00', 15000, 10]
       );
       await connection.execute(
-        "INSERT INTO tasks (id, title, stage, customer_id, due_date) VALUES (?, ?, ?, ?, ?)",
-        ['t6', 'Исправление багов', 'done', 'c1', '2026-06-11 09:00:00']
+        "INSERT INTO tasks (id, title, stage, customer_id, due_date, cost, hours) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        ['t6', 'Исправление багов', 'done', 'c1', '2026-06-11 09:00:00', 20000, 12]
       );
       await connection.execute(
-        "INSERT INTO tasks (id, title, stage, customer_id, due_date) VALUES (?, ?, ?, ?, ?)",
-        ['t7', 'Оптимизация БД', 'todo', 'c3', '2026-06-18 15:00:00']
+        "INSERT INTO tasks (id, title, stage, customer_id, due_date, cost, hours) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        ['t7', 'Оптимизация БД', 'todo', 'c3', '2026-06-18 15:00:00', 45000, 32]
       );
       await connection.execute(
-        "INSERT INTO tasks (id, title, stage, customer_id, due_date) VALUES (?, ?, ?, ?, ?)",
-        ['t8', 'Деплой на prod', 'testing', 'c2', '2026-06-17 11:00:00']
+        "INSERT INTO tasks (id, title, stage, customer_id, due_date, cost, hours) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        ['t8', 'Деплой на prod', 'testing', 'c2', '2026-06-17 11:00:00', 35000, 20]
       );
     }
 

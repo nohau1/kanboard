@@ -104,6 +104,14 @@ body {
   border-bottom: 1px solid #d9d9d9;
 }
 
+.column-total {
+  padding: 8px 16px;
+  font-size: 13px;
+  color: #666;
+  background: #fafafa;
+  border-bottom: 1px solid #f0f0f0;
+}
+
 .column-content {
   flex: 1;
   padding: 8px;
@@ -226,6 +234,15 @@ body {
   color: #ff4d4f;
 }
 
+.task-stats {
+  display: flex;
+  gap: 12px;
+  margin-top: 6px;
+  font-size: 12px;
+  color: #1890ff;
+  font-weight: 500;
+}
+
 .task-actions {
   display: none;
   gap: 4px;
@@ -305,6 +322,15 @@ body {
   outline: none;
   border-color: #1890ff;
   box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+}
+
+.form-row .form-group {
+  flex: 1;
 }
 
 .modal-actions {
@@ -538,7 +564,23 @@ body {
 }
 
 .day-header {
-  margin-bottom: 8px;
+  margin-bottom: 4px;
+}
+
+.day-total {
+  font-size: 11px;
+  color: #666;
+  margin-bottom: 4px;
+  text-align: right;
+}
+
+.day-footer-total {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed #d9d9d9;
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
 }
 
 .day-number {

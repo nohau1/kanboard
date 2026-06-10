@@ -170,6 +170,11 @@ export function Calendar({ tasks, customers, onEditTask }) {
           {dates.map((date, idx) => {
             const key = date.toDateString();
             const dayTasks = tasksByDate[key] || [];
+            const dayCost = dayTasks.reduce((sum, t) => sum + (parseFloat(t.cost) || 0), 0);
+            const dayHours = dayTasks.reduce((sum, t) => sum + (parseFloat(t.hours) || 0), 0);
+            const dayTotal = dayCost > 0 || dayHours > 0
+              ? `${dayCost.toLocaleString('ru-RU')} ₽ | ${dayHours.toFixed(1)} ч`
+              : '';
             
             return (
               <div
@@ -180,6 +185,9 @@ export function Calendar({ tasks, customers, onEditTask }) {
                   <div className="day-header">
                     <span className="day-number">{date.getDate()}</span>
                   </div>
+                )}
+                {dayTotal && view === 'month' && (
+                  <div className="day-total">{dayTotal}</div>
                 )}
                 <div className="day-tasks">
                   {dayTasks.map(task => (
@@ -194,6 +202,9 @@ export function Calendar({ tasks, customers, onEditTask }) {
                       )}
                       <span className="task-title">{task.title}</span>
                       {view !== 'month' && (
+                        <span className="task-cost">{task.cost ? task.cost.toLocaleString('ru-RU') + ' ₽' : ''}</span>
+                      )}
+                      {view !== 'month' && (
                         <span className="task-customer">{task.customer_name}</span>
                       )}
                     </div>
@@ -202,6 +213,9 @@ export function Calendar({ tasks, customers, onEditTask }) {
                     <div className="no-tasks">Нет задач</div>
                   )}
                 </div>
+                {dayTotal && view !== 'month' && (
+                  <div className="day-footer-total">{dayTotal}</div>
+                )}
               </div>
             );
           })}
