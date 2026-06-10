@@ -1,0 +1,43 @@
+{
+  "name": "Kanban Nohau",
+  "short_name": "Kanban",
+  "description": "Канбан‑доска для управления задачами",
+  "start_url": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay"],
+  "background_color": "#ffffff",
+  "theme_color": "#4A90E2",
+  "icons": [
+    {
+      "src": "/images/favicon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/images/favicon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/images/screenshot-desktop.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Главный экран на компьютере"
+    },
+    {
+      "src": "/images/screenshot-mobile.png",
+      "sizes": "375x812",
+      "type": "image/png",
+      "label": "Главный экран на мобильном"
+    }
+  ],
+  "protocol_handlers": [
+    {
+      "protocol": "web+kanban",
+      "url": "/task?id=%s"
+    }
+  ]
+}
