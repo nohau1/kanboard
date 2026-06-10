@@ -16,7 +16,7 @@ export function CustomerColumn({ customer, tasks, onAddTask, onEditTask, onDelet
     <div className="column customer-column">
       <h2 className="column-title">
         {customer.name}
-        <a href="#" className="btn-add" onClick={(e) => { e.preventDefault(); onAddTask(customer.id, 'customer'); }} title="Добавить задачу">+</a>
+        <a href="#" className="link" onClick={(e) => { e.preventDefault(); onAddTask(customer.id, 'customer'); }} title="Добавить задачу">+</a>
       </h2>
       <div
         ref={setNodeRef}
