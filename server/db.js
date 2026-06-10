@@ -1,82 +1,126 @@
-import Database from 'better-sqlite3';
+import mysql from 'mysql2/promise';
 import bcrypt from 'bcryptjs';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const db = new Database(join(__dirname, 'kanban.db'));
+const pool = mysql.createPool({
+  host: 'localhost',
+  user: 'kanban',
+  password: 'change-me',
+  database: 'kanban',
+  waitForConnections: true,
+  connectionLimit: 10,
+});
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS users (
-    id TEXT PRIMARY KEY,
-    username TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL,
-    role TEXT DEFAULT 'user',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
+async function initDb() {
+  const connection = await pool.getConnection();
+  
+  try {
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS users (
+        id VARCHAR(50) PRIMARY KEY,
+        username VARCHAR(100) UNIQUE NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        role VARCHAR(20) DEFAULT 'user',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
 
-  CREATE TABLE IF NOT EXISTS customers (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS customers (
+        id VARCHAR(50) PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
 
-  CREATE TABLE IF NOT EXISTS user_customers (
-    user_id TEXT NOT NULL,
-    customer_id TEXT NOT NULL,
-    PRIMARY KEY (user_id, customer_id),
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
-  );
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS user_customers (
+        user_id VARCHAR(50) NOT NULL,
+        customer_id VARCHAR(50) NOT NULL,
+        PRIMARY KEY (user_id, customer_id),
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
+      )
+    `);
 
-  CREATE TABLE IF NOT EXISTS tasks (
-    id TEXT PRIMARY KEY,
-    title TEXT NOT NULL,
-    stage TEXT DEFAULT 'todo',
-    customer_id TEXT NOT NULL,
-    user_id TEXT,
-    position INTEGER DEFAULT 0,
-    due_date TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
-  );
-`);
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS tasks (
+        id VARCHAR(50) PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        stage VARCHAR(50) DEFAULT 'todo',
+        customer_id VARCHAR(50) NOT NULL,
+        user_id VARCHAR(50),
+        position INT DEFAULT 0,
+        due_date DATETIME,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+      )
+    `);
 
-try {
-  db.exec('ALTER TABLE tasks ADD COLUMN due_date TEXT');
-} catch (e) {
-  if (!e.message.includes('duplicate column')) console.log('due_date column already exists');
+    try {
+      await connection.execute('ALTER TABLE tasks ADD COLUMN due_date DATETIME');
+    } catch (e) {
+      if (!e.message.includes('Duplicate')) console.log('due_date column check done');
+    }
+
+    const [admins] = await connection.execute('SELECT id FROM users WHERE role = ?', ['admin']);
+    if (admins.length === 0) {
+      const password = bcrypt.hashSync('admin123', 10);
+      await connection.execute(
+        'INSERT INTO users (id, username, password, role) VALUES (?, ?, ?, ?)',
+        ['u1', 'admin', password, 'admin']
+      );
+    }
+
+    const [customers] = await connection.execute('SELECT id FROM customers');
+    if (customers.length === 0) {
+      await connection.execute("INSERT INTO customers (id, name) VALUES ('c1', 'ООО \"Ромашка\"')");
+      await connection.execute("INSERT INTO customers (id, name) VALUES ('c2', 'ИП Сидоров')");
+      await connection.execute("INSERT INTO customers (id, name) VALUES ('c3', 'АО \"Мегакорп\"')");
+    }
+
+    const [tasks] = await connection.execute('SELECT id FROM tasks');
+    if (tasks.length === 0) {
+      await connection.execute(
+        "INSERT INTO tasks (id, title, stage, customer_id, due_date) VALUES (?, ?, ?, ?, ?)",
+        ['t1', 'Дизайн главной страницы', 'todo', 'c1', '2026-06-15 14:00:00']
+      );
+      await connection.execute(
+        "INSERT INTO tasks (id, title, stage, customer_id, due_date) VALUES (?, ?, ?, ?, ?)",
+        ['t2', 'Настройка сервера', 'todo', 'c2', '2026-06-12 10:00:00']
+      );
+      await connection.execute(
+        "INSERT INTO tasks (id, title, stage, customer_id, due_date) VALUES (?, ?, ?, ?, ?)",
+        ['t3', 'Интеграция API', 'in-progress', 'c1', '2026-06-14 16:00:00']
+      );
+      await connection.execute(
+        "INSERT INTO tasks (id, title, stage, customer_id, due_date) VALUES (?, ?, ?, ?, ?)",
+        ['t4', 'Тестирование модуля', 'testing', 'c3', '2026-06-16 12:00:00']
+      );
+      await connection.execute(
+        "INSERT INTO tasks (id, title, stage, customer_id, due_date) VALUES (?, ?, ?, ?, ?)",
+        ['t5', 'Документация', 'done', 'c2', '2026-06-10 18:00:00']
+      );
+      await connection.execute(
+        "INSERT INTO tasks (id, title, stage, customer_id, due_date) VALUES (?, ?, ?, ?, ?)",
+        ['t6', 'Исправление багов', 'done', 'c1', '2026-06-11 09:00:00']
+      );
+      await connection.execute(
+        "INSERT INTO tasks (id, title, stage, customer_id, due_date) VALUES (?, ?, ?, ?, ?)",
+        ['t7', 'Оптимизация БД', 'todo', 'c3', '2026-06-18 15:00:00']
+      );
+      await connection.execute(
+        "INSERT INTO tasks (id, title, stage, customer_id, due_date) VALUES (?, ?, ?, ?, ?)",
+        ['t8', 'Деплой на prod', 'testing', 'c2', '2026-06-17 11:00:00']
+      );
+    }
+
+  } finally {
+    connection.release();
+  }
 }
 
-const adminExists = db.prepare('SELECT id FROM users WHERE role = ?').get('admin');
-if (!adminExists) {
-  const password = bcrypt.hashSync('admin123', 10);
-  db.prepare('INSERT INTO users (id, username, password, role) VALUES (?, ?, ?, ?)').run(
-    'u1', 'admin', password, 'admin'
-  );
-}
+initDb().catch(console.error);
 
-const customersExist = db.prepare('SELECT id FROM customers').all();
-if (customersExist.length === 0) {
-  const insertCustomer = db.prepare('INSERT INTO customers (id, name) VALUES (?, ?)');
-  insertCustomer.run('c1', 'ООО "Ромашка"');
-  insertCustomer.run('c2', 'ИП Сидоров');
-  insertCustomer.run('c3', 'АО "Мегакорп"');
-}
-
-const tasksExist = db.prepare('SELECT id FROM tasks').all();
-if (tasksExist.length === 0) {
-  const insertTask = db.prepare('INSERT INTO tasks (id, title, stage, customer_id, due_date) VALUES (?, ?, ?, ?, ?)');
-  insertTask.run('t1', 'Дизайн главной страницы', 'todo', 'c1', '2026-06-15T14:00');
-  insertTask.run('t2', 'Настройка сервера', 'todo', 'c2', '2026-06-12T10:00');
-  insertTask.run('t3', 'Интеграция API', 'in-progress', 'c1', '2026-06-14T16:00');
-  insertTask.run('t4', 'Тестирование модуля', 'testing', 'c3', '2026-06-16T12:00');
-  insertTask.run('t5', 'Документация', 'done', 'c2', '2026-06-10T18:00');
-  insertTask.run('t6', 'Исправление багов', 'done', 'c1', '2026-06-11T09:00');
-  insertTask.run('t7', 'Оптимизация БД', 'todo', 'c3', '2026-06-18T15:00');
-  insertTask.run('t8', 'Деплой на prod', 'testing', 'c2', '2026-06-17T11:00');
-}
-
-export default db;
+export default pool;

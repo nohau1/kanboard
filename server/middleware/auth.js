@@ -1,9 +1,9 @@
 import jwt from 'jsonwebtoken';
-import db from '../db.js';
+import pool from '../db.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'change-me';
 
-export function authenticateToken(req, res, next) {
+export async function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
@@ -13,7 +13,8 @@ export function authenticateToken(req, res, next) {
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    const user = db.prepare('SELECT id, username, role FROM users WHERE id = ?').get(decoded.userId);
+    const [rows] = await pool.execute('SELECT id, username, role FROM users WHERE id = ?', [decoded.userId]);
+    const user = rows[0];
     
     if (!user) {
       return res.status(401).json({ error: 'Пользователь не найден' });
