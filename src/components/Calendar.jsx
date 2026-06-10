@@ -67,13 +67,14 @@ export function Calendar({ tasks, customers, onEditTask }) {
     const map = {};
     tasks.forEach(task => {
       if (!task.due_date) return;
-      const date = new Date(task.due_date);
+      const date = new Date(task.due_date.replace(' ', 'T'));
+      if (isNaN(date.getTime())) return;
       const key = date.toDateString();
       if (!map[key]) map[key] = [];
       map[key].push(task);
     });
     Object.keys(map).forEach(key => {
-      map[key].sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
+      map[key].sort((a, b) => new Date(a.due_date.replace(' ', 'T')) - new Date(b.due_date.replace(' ', 'T')));
     });
     return map;
   }, [tasks]);
@@ -198,7 +199,7 @@ export function Calendar({ tasks, customers, onEditTask }) {
                       onClick={() => onEditTask(task)}
                     >
                       {view !== 'month' && (
-                        <span className="task-time">{formatTime(new Date(task.due_date))}</span>
+                        <span className="task-time">{formatTime(new Date(task.due_date.replace(' ', 'T')))}</span>
                       )}
                       <span className="task-title">{task.title}</span>
                       {view !== 'month' && (
