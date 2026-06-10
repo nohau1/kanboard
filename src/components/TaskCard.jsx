@@ -4,14 +4,14 @@ import { CSS } from '@dnd-kit/utilities';
 function formatDueDate(dateStr) {
   if (!dateStr) return null;
   
-  let date = new Date(dateStr);
-  if (isNaN(date.getTime())) {
-    const parts = String(dateStr).split(' ');
-    if (parts.length >= 2) {
-      const [year, month, day] = parts[0].split('-').map(Number);
-      const [hours, minutes] = parts[1].split(':').map(Number);
-      date = new Date(year, month - 1, day, hours || 0, minutes || 0);
-    }
+  let date;
+  const parts = String(dateStr).split(' ');
+  if (parts.length >= 2) {
+    const [year, month, day] = parts[0].split('-').map(Number);
+    const [hours, minutes] = parts[1].split(':').map(Number);
+    date = new Date(year, month - 1, day, hours || 0, minutes || 0);
+  } else {
+    date = new Date(dateStr);
   }
   
   if (isNaN(date.getTime())) return null;
