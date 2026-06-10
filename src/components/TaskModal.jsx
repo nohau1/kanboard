@@ -13,7 +13,7 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
       setTitle(task.title);
       setCustomerId(task.customer_id);
       setStage(task.stage);
-      setDueDate(task.due_date || '');
+      setDueDate(task.due_date ? task.due_date.replace(' ', 'T').substring(0, 16) : '');
       setCost(task.cost || '');
       setHours(task.hours || '');
     } else {
@@ -30,11 +30,13 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
     e.preventDefault();
     if (!title.trim()) return;
     
+    const formattedDueDate = dueDate ? dueDate.replace('T', ' ') + ':00' : null;
+    
     onSave({
       title: title.trim(),
       customer_id: customerId,
       stage,
-      due_date: dueDate || null,
+      due_date: formattedDueDate,
       cost: cost ? parseFloat(cost) : 0,
       hours: hours ? parseFloat(hours) : 0,
     });
