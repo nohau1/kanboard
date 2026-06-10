@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-export function TaskModal({ task, customers, stages, initialStage, onSave, onClose }) {
+export function TaskModal({ task, customers, stages, initialStage, initialCustomer, onSave, onClose }) {
   const [title, setTitle] = useState('');
   const [customerId, setCustomerId] = useState('');
   const [stage, setStage] = useState('todo');
@@ -12,10 +12,10 @@ export function TaskModal({ task, customers, stages, initialStage, onSave, onClo
       setStage(task.stage);
     } else {
       setTitle('');
-      setCustomerId(customers[0]?.id || '');
+      setCustomerId(initialCustomer || customers[0]?.id || '');
       setStage(initialStage || stages[0]?.id || 'todo');
     }
-  }, [task, customers, stages, initialStage]);
+  }, [task, customers, stages, initialStage, initialCustomer]);
 
   function handleSubmit(e) {
     e.preventDefault();
