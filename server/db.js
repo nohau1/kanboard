@@ -44,6 +44,12 @@ db.exec(`
   );
 `);
 
+try {
+  db.exec('ALTER TABLE tasks ADD COLUMN due_date TEXT');
+} catch (e) {
+  if (!e.message.includes('duplicate column')) console.log('due_date column already exists');
+}
+
 const adminExists = db.prepare('SELECT id FROM users WHERE role = ?').get('admin');
 if (!adminExists) {
   const password = bcrypt.hashSync('admin123', 10);
