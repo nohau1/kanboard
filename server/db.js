@@ -8,6 +8,7 @@ const pool = mysql.createPool({
   database: 'kanban',
   waitForConnections: true,
   connectionLimit: 10,
+  timezone: '+03:00',
 });
 
 async function initDb() {
