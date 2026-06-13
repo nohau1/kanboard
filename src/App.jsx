@@ -342,6 +342,7 @@ export default function App() {
           initialCustomer={modal.mode === 'customer' ? modal.containerId : null}
           onSave={handleSaveTask}
           onClose={() => setModal(null)}
+          onDelete={handleDeleteTask}
         />
       )}
 

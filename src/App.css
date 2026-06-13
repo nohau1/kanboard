@@ -362,9 +362,27 @@ body {
 
 .modal-actions {
   display: flex;
-  justify-content: flex-end;
-  gap: 8px;
+  justify-content: space-between;
+  align-items: center;
   margin-top: 24px;
+}
+
+.modal-actions-right {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-delete-task {
+  padding: 8px 16px;
+  background: #ff4d4f;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+}
+
+.btn-delete-task:hover {
+  background: #ff7875;
 }
 
 .btn-cancel,

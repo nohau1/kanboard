@@ -59,7 +59,9 @@ export function TaskCard({ task, customerName, onEdit, onDelete }) {
   return (
     <div ref={setNodeRef} style={style} className="task-card" {...attributes} {...listeners}>
       <div className="task-content">
-        <div className="task-title">{task.title}</div>
+        <div className="task-title" onClick={handleEdit} style={{ cursor: 'pointer' }}>
+          {task.title}
+        </div>
         <div className="task-customer">{customerName || task.customer_name}</div>
         {dueDate && (
           <div className={`task-due-date ${dueDate.isOverdue ? 'overdue' : ''}`}>
@@ -72,10 +74,6 @@ export function TaskCard({ task, customerName, onEdit, onDelete }) {
             {task.hours > 0 && <span>{parseFloat(task.hours).toFixed(1)} ч</span>}
           </div>
         )}
-      </div>
-      <div className="task-actions">
-        <button className="btn-icon" onClick={handleEdit} title="Редактировать">✎</button>
-        <button className="btn-icon btn-delete" onClick={handleDelete} title="Удалить">✕</button>
       </div>
     </div>
   );

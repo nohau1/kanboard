@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-export function TaskModal({ task, customers, stages, initialStage, initialCustomer, onSave, onClose }) {
+export function TaskModal({ task, customers, stages, initialStage, initialCustomer, onSave, onClose, onDelete }) {
   const [title, setTitle] = useState('');
   const [customerId, setCustomerId] = useState('');
   const [stage, setStage] = useState('todo');
@@ -40,6 +40,13 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
       cost: cost ? parseFloat(cost) : 0,
       hours: hours ? parseFloat(hours) : 0,
     });
+  }
+
+  function handleDelete() {
+    if (confirm('Удалить задачу "' + title + '"?')) {
+      onDelete?.(task.id);
+      onClose?.();
+    }
   }
 
   return (
@@ -114,8 +121,15 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
             </div>
           </div>
           <div className="modal-actions">
-            <button type="button" className="btn-cancel" onClick={onClose}>Отмена</button>
-            <button type="submit" className="btn-save">Сохранить</button>
+            {task && onDelete && (
+              <button type="button" className="btn-delete-task" onClick={handleDelete}>
+                Удалить
+              </button>
+            )}
+            <div className="modal-actions-right">
+              <button type="button" className="btn-cancel" onClick={onClose}>Отмена</button>
+              <button type="submit" className="btn-save">Сохранить</button>
+            </div>
           </div>
         </form>
       </div>
