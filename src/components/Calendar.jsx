@@ -75,6 +75,13 @@ function parseLocalDate(dateStr) {
   return isNaN(date.getTime()) ? null : date;
 }
 
+function formatTotal(cost, hours) {
+  if (cost > 0 || hours > 0) {
+    return `${cost.toLocaleString('ru-RU')} ₽ | ${hours.toFixed(1)} ч`;
+  }
+  return '';
+}
+
 export function Calendar({ tasks, customers, onEditTask }) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState('week');
@@ -98,6 +105,8 @@ export function Calendar({ tasks, customers, onEditTask }) {
     });
     return map;
   }, [tasks]);
+
+  const monthDates = useMemo(() => getMonthDates(currentDate), [currentDate]);
 
   function navigate(direction) {
     const newDate = new Date(currentDate);
@@ -132,7 +141,7 @@ export function Calendar({ tasks, customers, onEditTask }) {
     } else if (view === 'week') {
       return getWeekDates(currentDate);
     } else {
-      return getMonthDates(currentDate);
+      return monthDates;
     }
   }
 
@@ -154,7 +163,45 @@ export function Calendar({ tasks, customers, onEditTask }) {
     }
   }
 
+  function getDayTotals(date) {
+    const key = date.toDateString();
+    const dayTasks = tasksByDate[key] || [];
+    const cost = dayTasks.reduce((sum, t) => sum + (parseFloat(t.cost) || 0), 0);
+    const hours = dayTasks.reduce((sum, t) => sum + (parseFloat(t.hours) || 0), 0);
+    return { cost, hours };
+  }
+
+  function getMonthTotals() {
+    let cost = 0;
+    let hours = 0;
+    monthDates.forEach(date => {
+      if (isCurrentMonth(date)) {
+        const { cost: c, hours: h } = getDayTotals(date);
+        cost += c;
+        hours += h;
+      }
+    });
+    return { cost, hours };
+  }
+
+  function getWeekTotalsForMonth(weekIndex) {
+    const startIdx = weekIndex * 7;
+    let cost = 0;
+    let hours = 0;
+    for (let i = 0; i < 7; i++) {
+      const idx = startIdx + i;
+      if (monthDates[idx]) {
+        const { cost: c, hours: h } = getDayTotals(monthDates[idx]);
+        cost += c;
+        hours += h;
+      }
+    }
+    return { cost, hours };
+  }
+
   const dates = getDates();
+  const monthTotal = getMonthTotals();
+  const numWeeks = Math.ceil(monthDates.length / 7);
 
   return (
     <div className="calendar">
@@ -188,50 +235,13 @@ export function Calendar({ tasks, customers, onEditTask }) {
         )}
         
         <div className="calendar-days">
-          {dates.map((date, idx) => {
+          {dates.map((date) => {
             const key = date.toDateString();
             const dayTasks = tasksByDate[key] || [];
-            const dayCost = dayTasks.reduce((sum, t) => sum + (parseFloat(t.cost) || 0), 0);
-            const dayHours = dayTasks.reduce((sum, t) => sum + (parseFloat(t.hours) || 0), 0);
-            const dayTotal = dayCost > 0 || dayHours > 0
-              ? `${dayCost.toLocaleString('ru-RU')} ₽ | ${dayHours.toFixed(1)} ч`
-              : '';
+            const { cost: dayCost, hours: dayHours } = getDayTotals(date);
+            const dayTotal = formatTotal(dayCost, dayHours);
             
-function getMonthTotals() {
-    let cost = 0;
-    let hours = 0;
-    monthDates.forEach(date => {
-      if (isCurrentMonth(date)) {
-        const key = date.toDateString();
-        const dayTasks = tasksByDate[key] || [];
-        cost += dayTasks.reduce((sum, t) => sum + (parseFloat(t.cost) || 0), 0);
-        hours += dayTasks.reduce((sum, t) => sum + (parseFloat(t.hours) || 0), 0);
-      }
-    });
-    return { cost, hours };
-  }
-
-  function getWeekTotalsForMonth(weekIndex) {
-    const startIdx = weekIndex * 7;
-    let cost = 0;
-    let hours = 0;
-    for (let i = 0; i < 7; i++) {
-      const idx = startIdx + i;
-      if (monthDates[idx]) {
-        const key = monthDates[idx].toDateString();
-        const dayTasks = tasksByDate[key] || [];
-        cost += dayTasks.reduce((sum, t) => sum + (parseFloat(t.cost) || 0), 0);
-        hours += dayTasks.reduce((sum, t) => sum + (parseFloat(t.hours) || 0), 0);
-      }
-    }
-    return { cost, hours };
-  }
-
-  const monthTotal = getMonthTotals();
-  const monthTotalText = formatTotal(monthTotal.cost, monthTotal.hours);
-  const numWeeks = Math.ceil(monthDates.length / 7);
-
-  return (
+            return (
               <div
                 key={key}
                 className={`calendar-day ${isToday(date) ? 'today' : ''} ${view === 'month' && !isCurrentMonth(date) ? 'other-month' : ''}`}
@@ -257,7 +267,7 @@ function getMonthTotals() {
                       )}
                       <span className="task-title">{task.title}</span>
                       {view !== 'month' && (
-                        <span className="task-cost">{task.cost ? task.cost.toLocaleString('ru-RU') + ' ₽' : ''}</span>
+                        <span className="task-cost">{task.cost ? parseFloat(task.cost).toLocaleString('ru-RU') + ' ₽' : ''}</span>
                       )}
                       {view !== 'month' && (
                         <span className="task-customer">{task.customer_name}</span>
@@ -280,16 +290,15 @@ function getMonthTotals() {
           <div className="calendar-month-summary">
             <div className="summary-row summary-month-total">
               <span>Итого за месяц:</span>
-              <span>{monthTotalText}</span>
+              <span>{formatTotal(monthTotal.cost, monthTotal.hours)}</span>
             </div>
             <div className="summary-weeks">
               {Array.from({ length: numWeeks }, (_, i) => {
                 const wt = getWeekTotalsForMonth(i);
-                const wtText = formatTotal(wt.cost, wt.hours);
                 return (
                   <div key={i} className="summary-row">
                     <span>Неделя {i + 1}:</span>
-                    <span>{wtText}</span>
+                    <span>{formatTotal(wt.cost, wt.hours)}</span>
                   </div>
                 );
               })}
