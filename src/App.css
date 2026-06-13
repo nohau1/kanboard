@@ -609,14 +609,15 @@ body {
 }
 
 .day-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 4px;
 }
 
-.day-total {
+.day-total-inline {
   font-size: 11px;
   color: #666;
-  margin-bottom: 4px;
-  text-align: right;
 }
 
 .day-footer-total {

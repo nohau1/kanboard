@@ -205,10 +205,10 @@ export function Calendar({ tasks, customers, onEditTask }) {
                 {view !== 'day' && (
                   <div className="day-header">
                     <span className="day-number">{date.getDate()}</span>
+                    {dayTotal && (
+                      <span className="day-total-inline">{dayTotal}</span>
+                    )}
                   </div>
-                )}
-                {dayTotal && view === 'month' && (
-                  <div className="day-total">{dayTotal}</div>
                 )}
                 <div className="day-tasks">
                   {dayTasks.map(task => (
@@ -234,7 +234,7 @@ export function Calendar({ tasks, customers, onEditTask }) {
                     <div className="no-tasks">Нет задач</div>
                   )}
                 </div>
-                {dayTotal && view !== 'month' && (
+                {dayTotal && view === 'day' && (
                   <div className="day-footer-total">{dayTotal}</div>
                 )}
               </div>
