@@ -57,9 +57,16 @@ export function TaskCard({ task, customerName, onEdit, onDelete }) {
   }
 
   return (
-    <div ref={setNodeRef} style={style} className="task-card" {...attributes} {...listeners}>
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="task-card"
+      {...attributes}
+      {...listeners}
+      onDoubleClick={handleEdit}
+    >
       <div className="task-content">
-        <div className="task-title" onClick={handleEdit} style={{ cursor: 'pointer' }}>
+        <div className="task-title">
           {task.title}
         </div>
         <div className="task-customer">{customerName || task.customer_name}</div>
