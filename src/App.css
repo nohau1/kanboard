@@ -415,6 +415,123 @@ body {
   border-color: #40a9ff;
 }
 
+.modal-large {
+  width: 700px;
+  max-width: 95vw;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.form-group textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-group textarea:focus {
+  outline: none;
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+.attachments-area {
+  border: 1px dashed #d9d9d9;
+  border-radius: 6px;
+  padding: 12px;
+  background: #fafafa;
+}
+
+.btn-attach {
+  padding: 6px 12px;
+  background: white;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.btn-attach:hover {
+  border-color: #1890ff;
+  color: #1890ff;
+}
+
+.btn-attach:disabled {
+  color: #999;
+  cursor: not-allowed;
+}
+
+.attachments-loading {
+  margin-left: 12px;
+  color: #666;
+  font-size: 13px;
+}
+
+.attachments-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.attachment-item {
+  position: relative;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  overflow: hidden;
+  background: white;
+}
+
+.attachment-image {
+  max-width: 120px;
+  max-height: 100px;
+  cursor: pointer;
+  display: block;
+}
+
+.attachment-file {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #1890ff;
+  cursor: pointer;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attachment-file:hover {
+  text-decoration: underline;
+}
+
+.attachment-delete {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 20px;
+  height: 20px;
+  background: rgba(0, 0, 0, 0.5);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.attachment-delete:hover {
+  background: #ff4d4f;
+}
+
 .header-actions {
   display: flex;
   gap: 16px;

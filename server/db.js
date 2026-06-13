@@ -54,6 +54,7 @@ async function initDb() {
         due_date DATETIME,
         cost DECIMAL(12,2) DEFAULT 0,
         hours DECIMAL(8,2) DEFAULT 0,
+        description TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
@@ -78,6 +79,25 @@ async function initDb() {
     } catch (e) {
       if (!e.message.includes('Duplicate')) console.log('hours column check done');
     }
+
+    try {
+      await connection.execute('ALTER TABLE tasks ADD COLUMN description TEXT');
+    } catch (e) {
+      if (!e.message.includes('Duplicate')) console.log('description column check done');
+    }
+
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS attachments (
+        id VARCHAR(50) PRIMARY KEY,
+        task_id VARCHAR(50) NOT NULL,
+        filename VARCHAR(255) NOT NULL,
+        original_name VARCHAR(255) NOT NULL,
+        mime_type VARCHAR(100),
+        size INT DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE
+      )
+    `);
 
     const [admins] = await connection.execute('SELECT id FROM users WHERE role = ?', ['admin']);
     if (admins.length === 0) {
