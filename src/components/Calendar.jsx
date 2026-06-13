@@ -308,9 +308,6 @@ export function Calendar({ tasks, customers, onEditTask }) {
             <div className="calendar-month-view">
               {monthDates.map((date, idx) => {
                 const dayTotal = getDayTotals(date);
-                const isWeekEnd = date.getDay() === 0;
-                const weekStartIdx = idx - (date.getDay() === 0 ? 6 : date.getDay() - 1);
-                
                 return (
                   <div
                     key={date.toDateString()}
@@ -320,6 +317,22 @@ export function Calendar({ tasks, customers, onEditTask }) {
                   </div>
                 );
               })}
+              {(() => {
+                const weekStartIndices = [];
+                monthDates.forEach((date, idx) => {
+                  if (date.getDay() === 1) weekStartIndices.push(idx);
+                });
+                return weekStartIndices.map((startIdx, i) => {
+                  const weekTotal = getWeekTotals(startIdx);
+                  return (
+                    <div key={`week-total-${i}`} className="calendar-day week-total">
+                      <div className="week-total-value">
+                        {formatTotal(weekTotal.cost, weekTotal.hours)}
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
             </div>
             <div className="calendar-month-totals">
               <div className="month-total-label">Итого за месяц</div>
