@@ -50,8 +50,8 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
   }
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={e => e.stopPropagation()}>
+    <div className="modal-overlay" onMouseDown={onClose}>
+      <div className="modal" onMouseDown={e => e.stopPropagation()}>
         <h2>{task ? 'Редактировать задачу' : 'Новая задача'}</h2>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
