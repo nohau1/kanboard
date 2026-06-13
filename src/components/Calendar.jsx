@@ -305,22 +305,27 @@ export function Calendar({ tasks, customers, onEditTask }) {
 
         {view === 'month' && (
           <>
-            <div className="calendar-month-view">
-              <div className="calendar-month-days">
-                {monthDates.map((date, idx) => {
-                  const dayTotal = getDayTotals(date);
-                  return (
-                    <div
-                      key={date.toDateString()}
-                      className={`calendar-day ${isToday(date) ? 'today' : ''} ${!isCurrentMonth(date) ? 'other-month' : ''}`}
-                    >
-                      {renderDayContent(date, dayTotal)}
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="calendar-month-week-totals">
-                <div className="week-totals-header">Итого</div>
+            <div className="calendar-month-days">
+              {monthDates.map((date, idx) => {
+                const dayTotal = getDayTotals(date);
+                return (
+                  <div
+                    key={date.toDateString()}
+                    className={`calendar-day ${isToday(date) ? 'today' : ''} ${!isCurrentMonth(date) ? 'other-month' : ''}`}
+                  >
+                    {renderDayContent(date, dayTotal)}
+                  </div>
+                );
+              })}
+            </div>
+            <div className="calendar-month-totals">
+              <div className="month-totals-grid">
+                <div className="month-totals-row">
+                  <span className="month-totals-label">Итого за месяц:</span>
+                  <span className="month-totals-value">
+                    {formatTotal(getMonthTotals().cost, getMonthTotals().hours)}
+                  </span>
+                </div>
                 {(() => {
                   const weekTotals = [];
                   for (let i = 0; i < monthDates.length; i += 7) {
@@ -328,17 +333,14 @@ export function Calendar({ tasks, customers, onEditTask }) {
                     weekTotals.push(weekTotal);
                   }
                   return weekTotals.map((wt, i) => (
-                    <div key={i} className="week-total-cell">
-                      {formatTotal(wt.cost, wt.hours)}
+                    <div key={i} className="month-totals-row">
+                      <span className="month-totals-label">Неделя {i + 1}:</span>
+                      <span className="month-totals-value">
+                        {formatTotal(wt.cost, wt.hours)}
+                      </span>
                     </div>
                   ));
                 })()}
-              </div>
-            </div>
-            <div className="calendar-month-totals">
-              <div className="month-total-label">Итого за месяц</div>
-              <div className="month-total-value">
-                {formatTotal(getMonthTotals().cost, getMonthTotals().hours)}
               </div>
             </div>
           </>
