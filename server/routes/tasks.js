@@ -1,6 +1,13 @@
 import express from 'express';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 import pool from '../db.js';
 import { authenticateToken } from '../middleware/auth.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const router = express.Router();
 
@@ -242,11 +249,22 @@ router.delete('/:id', async (req, res) => {
       }
     }
 
+    const [attachmentRows] = await pool.execute(
+      'SELECT filename FROM attachments WHERE task_id = ?',
+      [id]
+    );
     await pool.execute('DELETE FROM tasks WHERE id = ?', [id]);
     await pool.execute(
       'UPDATE tasks SET position = position - 1 WHERE stage = ? AND position > ?',
       [task.stage, task.position]
     );
+    
+    for (const att of attachmentRows) {
+      const filePath = path.join(__dirname, '..', 'uploads', att.filename);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    }
     res.json({ success: true });
   } catch (err) {
     console.error(err);
