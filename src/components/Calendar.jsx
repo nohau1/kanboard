@@ -75,13 +75,6 @@ function parseLocalDate(dateStr) {
   return isNaN(date.getTime()) ? null : date;
 }
 
-function formatTotal(cost, hours) {
-  if (cost > 0 || hours > 0) {
-    return `${cost.toLocaleString('ru-RU')} ₽ | ${hours.toFixed(1)} ч`;
-  }
-  return '';
-}
-
 export function Calendar({ tasks, customers, onEditTask }) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState('week');
@@ -106,9 +99,6 @@ export function Calendar({ tasks, customers, onEditTask }) {
     return map;
   }, [tasks]);
 
-  const weekDates = useMemo(() => getWeekDates(currentDate), [currentDate]);
-  const monthDates = useMemo(() => getMonthDates(currentDate), [currentDate]);
-
   function navigate(direction) {
     const newDate = new Date(currentDate);
     if (view === 'day') {
@@ -129,9 +119,20 @@ export function Calendar({ tasks, customers, onEditTask }) {
     if (view === 'day') {
       return currentDate.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' });
     } else if (view === 'week') {
-      return `${formatDate(weekDates[0])} - ${formatDate(weekDates[6])}, ${weekDates[0].getFullYear()}`;
+      const dates = getWeekDates(currentDate);
+      return `${formatDate(dates[0])} - ${formatDate(dates[6])}, ${dates[0].getFullYear()}`;
     } else {
       return currentDate.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
+    }
+  }
+
+  function getDates() {
+    if (view === 'day') {
+      return [currentDate];
+    } else if (view === 'week') {
+      return getWeekDates(currentDate);
+    } else {
+      return getMonthDates(currentDate);
     }
   }
 
@@ -153,74 +154,7 @@ export function Calendar({ tasks, customers, onEditTask }) {
     }
   }
 
-  function getDayTotals(date) {
-    const key = date.toDateString();
-    const dayTasks = tasksByDate[key] || [];
-    const cost = dayTasks.reduce((sum, t) => sum + (parseFloat(t.cost) || 0), 0);
-    const hours = dayTasks.reduce((sum, t) => sum + (parseFloat(t.hours) || 0), 0);
-    return { cost, hours, tasks: dayTasks };
-  }
-
-  function getWeekTotals(weekStartIndex) {
-    let totalCost = 0;
-    let totalHours = 0;
-    for (let i = 0; i < 7; i++) {
-      const idx = weekStartIndex + i;
-      if (monthDates[idx]) {
-        const { cost, hours } = getDayTotals(monthDates[idx]);
-        totalCost += cost;
-        totalHours += hours;
-      }
-    }
-    return { cost: totalCost, hours: totalHours };
-  }
-
-  function getMonthTotals() {
-    let totalCost = 0;
-    let totalHours = 0;
-    monthDates.forEach(date => {
-      if (isCurrentMonth(date)) {
-        const { cost, hours } = getDayTotals(date);
-        totalCost += cost;
-        totalHours += hours;
-      }
-    });
-    return { cost: totalCost, hours: totalHours };
-  }
-
-  function renderDayContent(date, dayTotal) {
-    return (
-      <>
-        <div className="day-header">
-          <span className="day-number">{date.getDate()}</span>
-          {dayTotal.tasks.length > 0 && (
-            <span className="day-inline-total">{formatTotal(dayTotal.cost, dayTotal.hours)}</span>
-          )}
-        </div>
-        <div className="day-tasks">
-          {dayTotal.tasks.map(task => (
-            <div
-              key={task.id}
-              className="calendar-task"
-              style={{ borderLeftColor: getStageColor(task.stage) }}
-              onClick={() => onEditTask(task)}
-            >
-              {view !== 'month' && (
-                <span className="task-time">{formatTime(parseLocalDate(task.due_date))}</span>
-              )}
-              <span className="task-title">{task.title}</span>
-              {view !== 'month' && (
-                <span className="task-cost">{task.cost ? parseFloat(task.cost).toLocaleString('ru-RU') + ' ₽' : ''}</span>
-              )}
-              {view !== 'month' && (
-                <span className="task-customer">{task.customer_name}</span>
-              )}
-            </div>
-          ))}
-        </div>
-      </>
-    );
-  }
+  const dates = getDates();
 
   return (
     <div className="calendar">
@@ -250,101 +184,63 @@ export function Calendar({ tasks, customers, onEditTask }) {
             {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map((day, i) => (
               <div key={i} className="weekday">{day}</div>
             ))}
-            {view === 'month' && <div className="weekday week-total-header">Итого</div>}
           </div>
         )}
         
-        {view === 'day' && (
-          <div className="calendar-day-view">
-            {(() => {
-              const dayTotal = getDayTotals(currentDate);
-              return (
-                <>
-                  <div className="day-column">
-                    {renderDayContent(currentDate, dayTotal)}
-                    {dayTotal.tasks.length === 0 && (
-                      <div className="no-tasks">Нет задач</div>
-                    )}
+        <div className="calendar-days">
+          {dates.map((date, idx) => {
+            const key = date.toDateString();
+            const dayTasks = tasksByDate[key] || [];
+            const dayCost = dayTasks.reduce((sum, t) => sum + (parseFloat(t.cost) || 0), 0);
+            const dayHours = dayTasks.reduce((sum, t) => sum + (parseFloat(t.hours) || 0), 0);
+            const dayTotal = dayCost > 0 || dayHours > 0
+              ? `${dayCost.toLocaleString('ru-RU')} ₽ | ${dayHours.toFixed(1)} ч`
+              : '';
+            
+            return (
+              <div
+                key={key}
+                className={`calendar-day ${isToday(date) ? 'today' : ''} ${view === 'month' && !isCurrentMonth(date) ? 'other-month' : ''}`}
+              >
+                {view !== 'day' && (
+                  <div className="day-header">
+                    <span className="day-number">{date.getDate()}</span>
                   </div>
-                  <div className="day-total-column">
-                    <div className="total-label">Итого за день</div>
-                    <div className="total-value">
-                      {formatTotal(dayTotal.cost, dayTotal.hours) || '—'}
+                )}
+                {dayTotal && view === 'month' && (
+                  <div className="day-total">{dayTotal}</div>
+                )}
+                <div className="day-tasks">
+                  {dayTasks.map(task => (
+                    <div
+                      key={task.id}
+                      className="calendar-task"
+                      style={{ borderLeftColor: getStageColor(task.stage) }}
+                      onClick={() => onEditTask(task)}
+                    >
+                      {view !== 'month' && (
+                        <span className="task-time">{formatTime(parseLocalDate(task.due_date))}</span>
+                      )}
+                      <span className="task-title">{task.title}</span>
+                      {view !== 'month' && (
+                        <span className="task-cost">{task.cost ? task.cost.toLocaleString('ru-RU') + ' ₽' : ''}</span>
+                      )}
+                      {view !== 'month' && (
+                        <span className="task-customer">{task.customer_name}</span>
+                      )}
                     </div>
-                  </div>
-                </>
-              );
-            })()}
-          </div>
-        )}
-
-        {view === 'week' && (
-          <div className="calendar-week-view">
-            {weekDates.map((date, idx) => {
-              const dayTotal = getDayTotals(date);
-              return (
-                <div
-                  key={date.toDateString()}
-                  className={`calendar-day ${isToday(date) ? 'today' : ''}`}
-                >
-                  {renderDayContent(date, dayTotal)}
+                  ))}
+                  {dayTasks.length === 0 && view === 'day' && (
+                    <div className="no-tasks">Нет задач</div>
+                  )}
                 </div>
-              );
-            })}
-            <div className="calendar-day week-total">
-              <div className="total-label">Итого</div>
-              <div className="week-total-value">
-                {formatTotal(
-                  weekDates.reduce((sum, d) => sum + getDayTotals(d).cost, 0),
-                  weekDates.reduce((sum, d) => sum + getDayTotals(d).hours, 0)
+                {dayTotal && view !== 'month' && (
+                  <div className="day-footer-total">{dayTotal}</div>
                 )}
               </div>
-            </div>
-          </div>
-        )}
-
-        {view === 'month' && (
-          <>
-            <div className="calendar-month-days">
-              {monthDates.map((date, idx) => {
-                const dayTotal = getDayTotals(date);
-                return (
-                  <div
-                    key={date.toDateString()}
-                    className={`calendar-day ${isToday(date) ? 'today' : ''} ${!isCurrentMonth(date) ? 'other-month' : ''}`}
-                  >
-                    {renderDayContent(date, dayTotal)}
-                  </div>
-                );
-              })}
-            </div>
-            <div className="calendar-month-totals">
-              <div className="month-totals-grid">
-                <div className="month-totals-row">
-                  <span className="month-totals-label">Итого за месяц:</span>
-                  <span className="month-totals-value">
-                    {formatTotal(getMonthTotals().cost, getMonthTotals().hours)}
-                  </span>
-                </div>
-                {(() => {
-                  const weekTotals = [];
-                  for (let i = 0; i < monthDates.length; i += 7) {
-                    const weekTotal = getWeekTotals(i);
-                    weekTotals.push(weekTotal);
-                  }
-                  return weekTotals.map((wt, i) => (
-                    <div key={i} className="month-totals-row">
-                      <span className="month-totals-label">Неделя {i + 1}:</span>
-                      <span className="month-totals-value">
-                        {formatTotal(wt.cost, wt.hours)}
-                      </span>
-                    </div>
-                  ));
-                })()}
-              </div>
-            </div>
-          </>
-        )}
+            );
+          })}
+        </div>
       </div>
     </div>
   );
