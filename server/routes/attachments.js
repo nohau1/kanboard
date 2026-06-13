@@ -29,6 +29,27 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
+router.get('/download/:id', async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM attachments WHERE id = ?', [req.params.id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Файл не найден' });
+    }
+    
+    const attachment = rows[0];
+    const filePath = path.join(__dirname, '..', 'uploads', attachment.filename);
+    
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: 'Файл не найден на диске' });
+    }
+    
+    res.download(filePath, attachment.original_name);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Ошибка при скачивании' });
+  }
+});
+
 router.use(authenticateToken);
 
 router.get('/task/:taskId', async (req, res) => {
@@ -105,27 +126,6 @@ router.post('/upload-base64', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Ошибка при сохранении' });
-  }
-});
-
-router.get('/download/:id', async (req, res) => {
-  try {
-    const [rows] = await pool.execute('SELECT * FROM attachments WHERE id = ?', [req.params.id]);
-    if (rows.length === 0) {
-      return res.status(404).json({ error: 'Файл не найден' });
-    }
-    
-    const attachment = rows[0];
-    const filePath = path.join(__dirname, '..', 'uploads', attachment.filename);
-    
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ error: 'Файл не найден на диске' });
-    }
-    
-    res.download(filePath, attachment.original_name);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Ошибка при скачивании' });
   }
 });
 

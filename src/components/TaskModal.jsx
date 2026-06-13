@@ -11,8 +11,10 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
   const [attachments, setAttachments] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [loadingAttachments, setLoadingAttachments] = useState(false);
+  const [pasteWarning, setPasteWarning] = useState(false);
   const fileInputRef = useRef(null);
   const textareaRef = useRef(null);
+  const pendingPaste = useRef(null);
 
   useEffect(() => {
     if (task) {
@@ -35,6 +37,14 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
       setAttachments([]);
     }
   }, [task, customers, stages, initialStage, initialCustomer]);
+
+  useEffect(() => {
+    if (task && pendingPaste.current) {
+      const { file, name } = pendingPaste.current;
+      pendingPaste.current = null;
+      uploadFile(file, name);
+    }
+  }, [task]);
 
   async function loadAttachments(taskId) {
     setLoadingAttachments(true);
@@ -61,6 +71,11 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
         e.preventDefault();
         const file = item.getAsFile();
         if (file) {
+          if (!task) {
+            setPasteWarning(true);
+            setTimeout(() => setPasteWarning(false), 3000);
+            return;
+          }
           uploadFile(file, `screenshot-${Date.now()}.png`);
         }
         return;
@@ -229,6 +244,9 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
               placeholder="Вставьте описание или изображение (Ctrl+V для скриншота из буфера обмена)"
               rows={5}
             />
+            {pasteWarning && (
+              <div className="paste-warning">Сначала сохраните задачу, потом вставляйте изображения</div>
+            )}
           </div>
 
           {task && (
