@@ -739,13 +739,24 @@ body {
 }
 
 .calendar-month-view {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.calendar-week-row {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
 }
 
-.calendar-month-view .calendar-day {
+.calendar-week-row .calendar-day {
   min-height: 80px;
   font-size: 12px;
+  border-top: none;
+}
+
+.calendar-week-row:first-child .calendar-day {
+  border-top: 1px solid #f0f0f0;
 }
 
 .calendar-month-totals {

@@ -306,28 +306,31 @@ export function Calendar({ tasks, customers, onEditTask }) {
         {view === 'month' && (
           <>
             <div className="calendar-month-view">
-              {monthDates.map((date, idx) => {
-                const dayTotal = getDayTotals(date);
-                return (
-                  <div
-                    key={date.toDateString()}
-                    className={`calendar-day ${isToday(date) ? 'today' : ''} ${!isCurrentMonth(date) ? 'other-month' : ''}`}
-                  >
-                    {renderDayContent(date, dayTotal)}
-                  </div>
-                );
-              })}
               {(() => {
-                const weekStartIndices = [];
-                monthDates.forEach((date, idx) => {
-                  if (date.getDay() === 1) weekStartIndices.push(idx);
-                });
-                return weekStartIndices.map((startIdx, i) => {
-                  const weekTotal = getWeekTotals(startIdx);
+                const weeks = [];
+                for (let i = 0; i < monthDates.length; i += 7) {
+                  weeks.push(monthDates.slice(i, i + 7));
+                }
+                return weeks.map((week, weekIdx) => {
+                  const weekStartIdx = weeks.slice(0, weekIdx).reduce((sum, w) => sum + w.length, 0);
+                  const weekTotal = getWeekTotals(weekStartIdx);
                   return (
-                    <div key={`week-total-${i}`} className="calendar-day week-total">
-                      <div className="week-total-value">
-                        {formatTotal(weekTotal.cost, weekTotal.hours)}
+                    <div key={`week-${weekIdx}`} className="calendar-week-row">
+                      {week.map((date) => {
+                        const dayTotal = getDayTotals(date);
+                        return (
+                          <div
+                            key={date.toDateString()}
+                            className={`calendar-day ${isToday(date) ? 'today' : ''} ${!isCurrentMonth(date) ? 'other-month' : ''}`}
+                          >
+                            {renderDayContent(date, dayTotal)}
+                          </div>
+                        );
+                      })}
+                      <div className="calendar-day week-total">
+                        <div className="week-total-value">
+                          {formatTotal(weekTotal.cost, weekTotal.hours)}
+                        </div>
                       </div>
                     </div>
                   );
