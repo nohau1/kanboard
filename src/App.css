@@ -192,7 +192,7 @@ body {
   border-radius: 6px;
   padding: 12px;
   margin-bottom: 8px;
-  cursor: pointer;
+  cursor: default;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   transition: box-shadow 0.2s, transform 0.2s;
   display: flex;
@@ -202,6 +202,10 @@ body {
 
 .task-card:hover {
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+}
+
+.task-title {
+  cursor: pointer;
 }
 
 .task-content {

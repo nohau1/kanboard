@@ -63,10 +63,13 @@ export function TaskCard({ task, customerName, onEdit, onDelete }) {
       className="task-card"
       {...attributes}
       {...listeners}
-      onDoubleClick={handleEdit}
+      onDoubleClick={(e) => {
+        if (e.target.closest('.task-title')) return;
+        handleEdit(e);
+      }}
     >
       <div className="task-content">
-        <div className="task-title">
+        <div className="task-title" onClick={handleEdit}>
           {task.title}
         </div>
         <div className="task-customer">{customerName || task.customer_name}</div>
