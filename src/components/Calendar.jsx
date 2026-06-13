@@ -197,7 +197,41 @@ export function Calendar({ tasks, customers, onEditTask }) {
               ? `${dayCost.toLocaleString('ru-RU')} ₽ | ${dayHours.toFixed(1)} ч`
               : '';
             
-            return (
+function getMonthTotals() {
+    let cost = 0;
+    let hours = 0;
+    monthDates.forEach(date => {
+      if (isCurrentMonth(date)) {
+        const key = date.toDateString();
+        const dayTasks = tasksByDate[key] || [];
+        cost += dayTasks.reduce((sum, t) => sum + (parseFloat(t.cost) || 0), 0);
+        hours += dayTasks.reduce((sum, t) => sum + (parseFloat(t.hours) || 0), 0);
+      }
+    });
+    return { cost, hours };
+  }
+
+  function getWeekTotalsForMonth(weekIndex) {
+    const startIdx = weekIndex * 7;
+    let cost = 0;
+    let hours = 0;
+    for (let i = 0; i < 7; i++) {
+      const idx = startIdx + i;
+      if (monthDates[idx]) {
+        const key = monthDates[idx].toDateString();
+        const dayTasks = tasksByDate[key] || [];
+        cost += dayTasks.reduce((sum, t) => sum + (parseFloat(t.cost) || 0), 0);
+        hours += dayTasks.reduce((sum, t) => sum + (parseFloat(t.hours) || 0), 0);
+      }
+    }
+    return { cost, hours };
+  }
+
+  const monthTotal = getMonthTotals();
+  const monthTotalText = formatTotal(monthTotal.cost, monthTotal.hours);
+  const numWeeks = Math.ceil(monthDates.length / 7);
+
+  return (
               <div
                 key={key}
                 className={`calendar-day ${isToday(date) ? 'today' : ''} ${view === 'month' && !isCurrentMonth(date) ? 'other-month' : ''}`}
@@ -241,6 +275,27 @@ export function Calendar({ tasks, customers, onEditTask }) {
             );
           })}
         </div>
+
+        {view === 'month' && (
+          <div className="calendar-month-summary">
+            <div className="summary-row summary-month-total">
+              <span>Итого за месяц:</span>
+              <span>{monthTotalText}</span>
+            </div>
+            <div className="summary-weeks">
+              {Array.from({ length: numWeeks }, (_, i) => {
+                const wt = getWeekTotalsForMonth(i);
+                const wtText = formatTotal(wt.cost, wt.hours);
+                return (
+                  <div key={i} className="summary-row">
+                    <span>Неделя {i + 1}:</span>
+                    <span>{wtText}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
