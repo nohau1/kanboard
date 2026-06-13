@@ -74,11 +74,22 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
           </div>
           <div className="form-group">
             <label>Срок исполнения</label>
-            <input
-              type="datetime-local"
-              value={dueDate}
-              onChange={e => setDueDate(e.target.value)}
-            />
+            <div className="datetime-picker">
+              <input
+                type="datetime-local"
+                value={dueDate}
+                onChange={e => setDueDate(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && e.target.blur()}
+              />
+              <button
+                type="button"
+                className="btn-datetime-ok"
+                onClick={() => document.activeElement.blur()}
+                disabled={!dueDate}
+              >
+                OK
+              </button>
+            </div>
           </div>
           <div className="form-row">
             <div className="form-group">
