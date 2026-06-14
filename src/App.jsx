@@ -39,12 +39,24 @@ export default function App() {
     const hash = window.location.hash.replace('#', '');
     if (hash === 'customers') return 'customers';
     if (hash === 'calendar') return 'calendar';
+    if (hash.startsWith('task/')) return 'stages';
     return 'stages';
   });
   const [modal, setModal] = useState(null);
   const [showAdmin, setShowAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const hoverStageRef = useRef(null);
+
+  useEffect(() => {
+    if (!loading && tasks.length > 0) {
+      const hash = window.location.hash.replace('#', '');
+      if (hash.startsWith('task/')) {
+        const taskId = hash.replace('task/', '');
+        const t = tasks.find(t => t.id === taskId);
+        if (t) setModal({ mode: 'edit', task: t });
+      }
+    }
+  }, [loading, tasks]);
 
   useEffect(() => {
     if (user) {
@@ -55,13 +67,22 @@ export default function App() {
 
     function handleHashChange() {
       const hash = window.location.hash.replace('#', '');
+      if (hash.startsWith('task/')) {
+        const taskId = hash.replace('task/', '');
+        const t = tasks.find(t => t.id === taskId);
+        if (t) {
+          setModal({ mode: 'edit', task: t });
+          setView('stages');
+          return;
+        }
+      }
       if (hash === 'customers') setView('customers');
       else if (hash === 'calendar') setView('calendar');
       else setView('stages');
     }
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
-  }, [user]);
+  }, [user, tasks]);
 
   async function loadData() {
     try {
@@ -200,6 +221,15 @@ export default function App() {
       containerId: null,
       task,
     });
+    window.location.hash = 'task/' + task.id;
+  }
+
+  function handleCloseModal() {
+    setModal(null);
+    const hash = window.location.hash.replace('#', '');
+    if (hash.startsWith('task/')) {
+      window.location.hash = view;
+    }
   }
 
   async function handleDeleteTask(taskId) {
@@ -341,7 +371,7 @@ export default function App() {
           initialStage={modal.mode === 'stage' ? modal.containerId : null}
           initialCustomer={modal.mode === 'customer' ? modal.containerId : null}
           onSave={handleSaveTask}
-          onClose={() => setModal(null)}
+          onClose={handleCloseModal}
           onDelete={handleDeleteTask}
         />
       )}
