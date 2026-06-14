@@ -4,6 +4,10 @@ import pool from '../db.js';
 const JWT_SECRET = process.env.JWT_SECRET || 'change-me';
 
 export async function authenticateToken(req, res, next) {
+  if (req.path.startsWith('/download/')) {
+    return next();
+  }
+  
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
