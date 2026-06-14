@@ -146,6 +146,21 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
     e.target.value = '';
   }
 
+  function handleDragOver(e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const files = e.dataTransfer?.files;
+    if (!files || !task) return;
+    for (const file of files) {
+      uploadFile(file, file.name);
+    }
+  }
+
   async function handleDeleteAttachment(attachmentId) {
     if (!confirm('Удалить вложение?')) return;
 
@@ -270,6 +285,8 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
               value={description}
               onChange={e => setDescription(e.target.value)}
               onPaste={handlePaste}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
               placeholder="Вставьте описание или изображение (Ctrl+V для скриншота из буфера обмена)"
               rows={5}
             />
@@ -281,7 +298,7 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
           {task && (
             <div className="form-group">
               <label>Вложения</label>
-              <div className="attachments-area">
+              <div className="attachments-area" onDragOver={handleDragOver} onDrop={handleDrop}>
                 <input
                   type="file"
                   ref={fileInputRef}
