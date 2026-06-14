@@ -389,7 +389,7 @@ export default function App() {
         />
       )}
 
-      {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} />}
+      {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} onEditTask={handleEditTask} />}
     </div>
   );
 }

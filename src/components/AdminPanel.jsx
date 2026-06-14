@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { api } from '../api';
 import './AdminPanel.css';
 
-export function AdminPanel({ onClose }) {
+export function AdminPanel({ onClose, onEditTask }) {
   const [users, setUsers] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [tasks, setTasks] = useState([]);
@@ -199,18 +199,26 @@ export function AdminPanel({ onClose }) {
                     <th>Название</th>
                     <th>Заказчик</th>
                     <th>Стадия</th>
-                    <th>Создан</th>
+                    <th>Срок</th>
+                    <th>Стоимость</th>
+                    <th>Часы</th>
+                    <th>Действия</th>
                   </tr>
                 </thead>
                 <tbody>
                   {tasks.map(task => (
-                    <tr key={task.id}>
+                    <tr key={task.id} className="task-row" onClick={() => onEditTask?.(task)}>
                       <td>{task.title}</td>
                       <td>{task.customer_name}</td>
                       <td>
                         <span className={`stage-badge ${task.stage}`}>{task.stage}</span>
                       </td>
-                      <td>{new Date(task.created_at).toLocaleDateString()}</td>
+                      <td>{task.due_date ? new Date(task.due_date).toLocaleDateString('ru-RU') : '—'}</td>
+                      <td>{task.cost ? parseFloat(task.cost).toLocaleString('ru-RU') + ' ₽' : '—'}</td>
+                      <td>{task.hours ? parseFloat(task.hours) + ' ч' : '—'}</td>
+                      <td>
+                        <button className="btn-icon" onClick={(e) => { e.stopPropagation(); onEditTask?.(task); }}>✎</button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
