@@ -2,10 +2,9 @@ import { useState, useEffect } from 'react';
 import { api } from '../api';
 import './AdminPanel.css';
 
-export function AdminPanel({ onClose, onEditTask }) {
+export function AdminPanel({ onClose, onEditTask, tasks }) {
   const [users, setUsers] = useState([]);
   const [customers, setCustomers] = useState([]);
-  const [tasks, setTasks] = useState([]);
   const [tab, setTab] = useState('users');
   const [editingUser, setEditingUser] = useState(null);
   const [editingCustomer, setEditingCustomer] = useState(null);
@@ -17,14 +16,12 @@ export function AdminPanel({ onClose, onEditTask }) {
 
   async function loadData() {
     try {
-      const [usersData, customersData, tasksData] = await Promise.all([
+      const [usersData, customersData] = await Promise.all([
         api.users.list(),
         api.customers.list(),
-        api.tasks.list(),
       ]);
       setUsers(usersData);
       setCustomers(customersData);
-      setTasks(tasksData);
     } catch (err) {
       console.error(err);
     } finally {
