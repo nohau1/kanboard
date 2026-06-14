@@ -15,6 +15,10 @@ export function CustomerKanbanBoard({ tasks, customers, onAddTask, onEditTask, o
     return (a.position || 0) - (b.position || 0);
   });
 
+  const customersWithTasks = customers.filter(c => 
+    sortedTasks.some(t => t.customer_id === c.id)
+  );
+
   return (
     <div className="customer-board">
       <div className="stage-filter">
@@ -37,7 +41,7 @@ export function CustomerKanbanBoard({ tasks, customers, onAddTask, onEditTask, o
         ))}
       </div>
       <div className="board">
-        {customers.map(customer => {
+        {customersWithTasks.map(customer => {
           const customerTasks = sortedTasks.filter(t => t.customer_id === customer.id);
           const totalCost = customerTasks.reduce((sum, t) => sum + (parseFloat(t.cost) || 0), 0);
           const totalHours = customerTasks.reduce((sum, t) => sum + (parseFloat(t.hours) || 0), 0);
