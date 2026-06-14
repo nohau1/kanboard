@@ -16,6 +16,7 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
   const [pasteWarning, setPasteWarning] = useState(false);
   const [blobUrls, setBlobUrls] = useState({});
   const [previewAttachment, setPreviewAttachment] = useState(null);
+  const [copied, setCopied] = useState(false);
   const fileInputRef = useRef(null);
   const textareaRef = useRef(null);
   const pendingPaste = useRef(null);
@@ -205,10 +206,25 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
     return mimeType?.startsWith('image/');
   }
 
+  function handleShare() {
+    const url = window.location.origin + window.location.pathname + '#task/' + task.id;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
   return (
     <div className="modal-overlay" onMouseDown={onClose}>
       <div className="modal modal-large" onMouseDown={e => e.stopPropagation()}>
-        <h2>{task ? 'Редактировать задачу' : 'Новая задача'}</h2>
+        <div className="modal-header">
+          <h2>{task ? 'Редактировать задачу' : 'Новая задача'}</h2>
+          {task && (
+            <button type="button" className="btn-share" onClick={handleShare}>
+              {copied ? 'Скопировано!' : 'Поделиться'}
+            </button>
+          )}
+        </div>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label>Название</label>
