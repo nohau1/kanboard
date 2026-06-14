@@ -42,7 +42,7 @@ export function ImagePreview({ src, alt, onClose }) {
   }, [onClose]);
 
   return (
-    <div className="image-preview-overlay" onClick={onClose}>
+    <div className="image-preview-overlay" onMouseDown={(e) => { e.stopPropagation(); onClose(); }}>
       <div className="image-preview-content" onClick={e => e.stopPropagation()}>
         <button className="image-preview-close" onClick={onClose}>×</button>
         {loading ? (
