@@ -59,7 +59,7 @@ export function AdminPanel({ onClose }) {
 
   async function handleSaveCustomer(data) {
     try {
-      if (editingCustomer) {
+      if (editingCustomer?.id) {
         const updated = await api.customers.update(editingCustomer.id, data);
         setCustomers(customers.map(c => c.id === updated.id ? updated : c));
       } else {
