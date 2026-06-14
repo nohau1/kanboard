@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { ImageWithAuth } from './ImageWithAuth';
+import { ImagePreview } from './ImagePreview';
 
 export function TaskModal({ task, customers, stages, initialStage, initialCustomer, onSave, onClose, onDelete }) {
   const [title, setTitle] = useState('');
@@ -14,6 +15,7 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
   const [loadingAttachments, setLoadingAttachments] = useState(false);
   const [pasteWarning, setPasteWarning] = useState(false);
   const [blobUrls, setBlobUrls] = useState({});
+  const [previewAttachment, setPreviewAttachment] = useState(null);
   const fileInputRef = useRef(null);
   const textareaRef = useRef(null);
   const pendingPaste = useRef(null);
@@ -306,7 +308,7 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
                             src={`/api/attachments/download/${att.id}`}
                             alt={att.original_name}
                             className="attachment-image"
-                            onClick={() => window.open(`/api/attachments/download/${att.id}`, '_blank')}
+                            onClick={() => setPreviewAttachment(att)}
                           />
                         ) : (
                           <span
@@ -344,6 +346,13 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
           </div>
         </form>
       </div>
+      {previewAttachment && (
+        <ImagePreview
+          src={`/api/attachments/download/${previewAttachment.id}`}
+          alt={previewAttachment.original_name}
+          onClose={() => setPreviewAttachment(null)}
+        />
+      )}
     </div>
   );
 }

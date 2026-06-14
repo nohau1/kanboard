@@ -542,6 +542,55 @@ body {
   font-size: 13px;
 }
 
+.image-preview-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.image-preview-content {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+}
+
+.image-preview-content img {
+  max-width: 100%;
+  max-height: 90vh;
+  display: block;
+}
+
+.image-preview-close {
+  position: absolute;
+  top: -40px;
+  right: 0;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 32px;
+  cursor: pointer;
+  padding: 8px;
+  line-height: 1;
+}
+
+.image-preview-close:hover {
+  color: #1890ff;
+}
+
+.image-preview-loading,
+.image-preview-error {
+  color: white;
+  padding: 40px;
+  text-align: center;
+}
+
 .header-actions {
   display: flex;
   gap: 16px;
