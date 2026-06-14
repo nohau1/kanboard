@@ -47,9 +47,11 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const hoverStageRef = useRef(null);
   const skipHashRef = useRef(false);
+  const initialLoadRef = useRef(true);
 
   useEffect(() => {
-    if (!loading && tasks.length > 0) {
+    if (!loading && tasks.length > 0 && initialLoadRef.current) {
+      initialLoadRef.current = false;
       const hash = window.location.hash.replace('#', '');
       if (hash.startsWith('task/')) {
         const taskId = hash.replace('task/', '');
@@ -76,7 +78,7 @@ export default function App() {
         const taskId = hash.replace('task/', '');
         const t = tasks.find(t => t.id === taskId);
         if (t) {
-          setModal({ mode: 'edit', task: t });
+          setModal(prev => prev?.task?.id === taskId ? prev : { mode: 'edit', task: t });
           setView('stages');
           return;
         }
