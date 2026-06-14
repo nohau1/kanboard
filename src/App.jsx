@@ -48,6 +48,8 @@ export default function App() {
   const hoverStageRef = useRef(null);
   const skipHashRef = useRef(false);
   const initialLoadRef = useRef(true);
+  const tasksRef = useRef([]);
+  tasksRef.current = tasks;
 
   useEffect(() => {
     if (!loading && tasks.length > 0 && initialLoadRef.current) {
@@ -67,7 +69,9 @@ export default function App() {
     } else {
       setLoading(false);
     }
+  }, [user]);
 
+  useEffect(() => {
     function handleHashChange() {
       if (skipHashRef.current) {
         skipHashRef.current = false;
@@ -76,7 +80,7 @@ export default function App() {
       const hash = window.location.hash.replace('#', '');
       if (hash.startsWith('task/')) {
         const taskId = hash.replace('task/', '');
-        const t = tasks.find(t => t.id === taskId);
+        const t = tasksRef.current.find(t => t.id === taskId);
         if (t) {
           setModal(prev => prev?.task?.id === taskId ? prev : { mode: 'edit', task: t });
           setView('stages');
@@ -89,7 +93,7 @@ export default function App() {
     }
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
-  }, [user, tasks]);
+  }, []);
 
   async function loadData() {
     try {
