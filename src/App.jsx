@@ -46,6 +46,7 @@ export default function App() {
   const [showAdmin, setShowAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const hoverStageRef = useRef(null);
+  const skipHashRef = useRef(false);
 
   useEffect(() => {
     if (!loading && tasks.length > 0) {
@@ -66,6 +67,10 @@ export default function App() {
     }
 
     function handleHashChange() {
+      if (skipHashRef.current) {
+        skipHashRef.current = false;
+        return;
+      }
       const hash = window.location.hash.replace('#', '');
       if (hash.startsWith('task/')) {
         const taskId = hash.replace('task/', '');
@@ -221,11 +226,13 @@ export default function App() {
       containerId: null,
       task,
     });
+    skipHashRef.current = true;
     window.location.hash = 'task/' + task.id;
   }
 
   function handleCloseModal() {
     setModal(null);
+    skipHashRef.current = true;
     const hash = window.location.hash.replace('#', '');
     if (hash.startsWith('task/')) {
       window.location.hash = view;
