@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { ImageWithAuth } from './ImageWithAuth';
 
 export function TaskModal({ task, customers, stages, initialStage, initialCustomer, onSave, onClose, onDelete }) {
   const [title, setTitle] = useState('');
@@ -12,6 +13,7 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
   const [uploading, setUploading] = useState(false);
   const [loadingAttachments, setLoadingAttachments] = useState(false);
   const [pasteWarning, setPasteWarning] = useState(false);
+  const [blobUrls, setBlobUrls] = useState({});
   const fileInputRef = useRef(null);
   const textareaRef = useRef(null);
   const pendingPaste = useRef(null);
@@ -45,6 +47,31 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
       uploadFile(file, name);
     }
   }, [task]);
+
+  useEffect(() => {
+    return () => {
+      Object.values(blobUrls).forEach(url => URL.revokeObjectURL(url));
+    };
+  }, []);
+
+  async function loadBlobUrl(attachment) {
+    if (blobUrls[attachment.id]) return blobUrls[attachment.id];
+    
+    try {
+      const res = await fetch(`/api/attachments/download/${attachment.id}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        setBlobUrls(prev => ({ ...prev, [attachment.id]: url }));
+        return url;
+      }
+    } catch (err) {
+      console.error('Failed to load blob:', err);
+    }
+    return null;
+  }
 
   async function loadAttachments(taskId) {
     setLoadingAttachments(true);
@@ -275,7 +302,7 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
                     {attachments.map(att => (
                       <div key={att.id} className="attachment-item">
                         {isImage(att.mime_type) ? (
-                          <img
+                          <ImageWithAuth
                             src={`/api/attachments/download/${att.id}`}
                             alt={att.original_name}
                             className="attachment-image"
