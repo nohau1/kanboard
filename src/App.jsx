@@ -246,7 +246,6 @@ export default function App() {
   }
 
   async function handleDeleteTask(taskId) {
-    if (!confirm('Удалить задачу?')) return;
     try {
       await api.tasks.delete(taskId);
       setTasks(tasks.filter(t => t.id !== taskId));
