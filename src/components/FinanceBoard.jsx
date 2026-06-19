@@ -161,13 +161,19 @@ export function FinanceBoard({ onEditTask }) {
             {(!editingInvoice.id && editingInvoice.isNew) ? (
               <div className="form-group">
                 <label>Заказчик</label>
-                <select value={editingInvoice.customer_id} onChange={e => setEditingInvoice(prev => ({ ...prev, customer_id: e.target.value }))}>
-                  <option value="">Выберите...</option>
-                  {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
-                <button className="btn-save" onClick={handleCreateInvoice} disabled={saving} style={{ marginTop: 12 }}>
-                  Создать счёт
-                </button>
+                {customers.length === 0 ? (
+                  <div style={{ color: '#999', padding: '8px 0' }}>Нет заказчиков. Сначала создайте заказчика в Админке.</div>
+                ) : (
+                  <>
+                    <select value={editingInvoice.customer_id} onChange={e => setEditingInvoice(prev => ({ ...prev, customer_id: e.target.value }))}>
+                      <option value="">Выберите...</option>
+                      {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                    <button className="btn-save" onClick={handleCreateInvoice} disabled={saving} style={{ marginTop: 12 }}>
+                      Создать счёт
+                    </button>
+                  </>
+                )}
               </div>
             ) : editingInvoice.id && (
               <div>
