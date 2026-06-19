@@ -1089,3 +1089,23 @@ body {
 .db-table tr:hover td {
   background: #fafafa;
 }
+
+.db-cell {
+  cursor: pointer;
+  min-width: 60px;
+}
+
+.db-cell:hover {
+  background: #e6f7ff !important;
+}
+
+.db-cell-input {
+  width: 100%;
+  padding: 2px 4px;
+  border: 2px solid #1890ff;
+  border-radius: 2px;
+  font-size: 12px;
+  font-family: monospace;
+  outline: none;
+  box-sizing: border-box;
+}

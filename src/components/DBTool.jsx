@@ -18,11 +18,15 @@ export function DBTool({ onClose }) {
   const [selectedTable, setSelectedTable] = useState(null);
   const [columns, setColumns] = useState([]);
   const [data, setData] = useState([]);
+  const [pkColumn, setPkColumn] = useState('id');
   const [query, setQuery] = useState('');
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [tab, setTab] = useState('browse');
+  const [editingCell, setEditingCell] = useState(null);
+  const [editValue, setEditValue] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     loadTables();
@@ -42,6 +46,7 @@ export function DBTool({ onClose }) {
   async function selectTable(table) {
     setSelectedTable(table);
     setTab('browse');
+    setEditingCell(null);
     try {
       const [cols, rows] = await Promise.all([
         fetchApi(`/api/db/columns/${table}`),
@@ -49,8 +54,65 @@ export function DBTool({ onClose }) {
       ]);
       setColumns(cols);
       setData(rows);
+      const pk = cols.find(c => c.Key === 'PRI');
+      if (pk) setPkColumn(pk.Field);
     } catch (err) {
       setError(err.message);
+    }
+  }
+
+  function startEdit(rowIdx, colName) {
+    const row = data[rowIdx];
+    if (!row) return;
+    const val = row[colName];
+    setEditingCell({ rowIdx, colName });
+    setEditValue(val === null ? '' : String(val));
+  }
+
+  function cancelEdit() {
+    setEditingCell(null);
+  }
+
+  async function saveEdit() {
+    if (!editingCell || !selectedTable) return;
+    const { rowIdx, colName } = editingCell;
+    const row = data[rowIdx];
+    const pkVal = row[pkColumn];
+
+    let newVal = editValue.trim();
+    const sqlVal = newVal === '' ? 'NULL' : `'${newVal.replace(/'/g, "\\'")}'`;
+
+    setSaving(true);
+    try {
+      await fetchApi('/api/db/query', {
+        method: 'POST',
+        body: JSON.stringify({
+          sql: `UPDATE ${selectedTable} SET ${colName} = ${sqlVal} WHERE ${pkColumn} = '${String(pkVal).replace(/'/g, "\\'")}'`
+        }),
+      });
+
+      setData(prev => prev.map((r, i) =>
+        i === rowIdx ? { ...r, [colName]: newVal === '' ? null : editValue } : r
+      ));
+      setEditingCell(null);
+    } catch (err) {
+      setError(err.message);
+    }
+    setSaving(false);
+  }
+
+  function handleCellKeyDown(e) {
+    if (e.key === 'Enter') saveEdit();
+    if (e.key === 'Escape') cancelEdit();
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      saveEdit();
+      // move to next cell
+      const { rowIdx, colName } = editingCell;
+      const colIdx = columns.findIndex(c => c.Field === colName);
+      if (colIdx < columns.length - 1) {
+        setTimeout(() => startEdit(rowIdx, columns[colIdx + 1].Field), 50);
+      }
     }
   }
 
@@ -90,7 +152,7 @@ export function DBTool({ onClose }) {
         </div>
 
         {tab === 'browse' && (
-          <div style={{ display: 'flex', gap: 16 }}>
+          <div style={{ display: 'flex', gap: 16, flex: 1, overflow: 'hidden' }}>
             <div className="db-tables-list">
               {tables.map(t => (
                 <div
@@ -102,25 +164,46 @@ export function DBTool({ onClose }) {
                 </div>
               ))}
             </div>
-            <div style={{ flex: 1, overflow: 'auto' }}>
+            <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
               {selectedTable && (
                 <div>
                   <h3 style={{ margin: '0 0 8px' }}>{selectedTable}</h3>
-                  <div style={{ fontSize: 12, color: '#666', marginBottom: 12 }}>
+                  <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>
                     {columns.map(c => `${c.Field} (${c.Type})`).join(', ')}
+                  </div>
+                  <div style={{ fontSize: 11, color: '#999', marginBottom: 8 }}>
+                    Клик по ячейке для редактирования. Enter — сохранить, Esc — отмена, Tab — далее.
+                    {saving && ' Сохранение...'}
                   </div>
                   <div className="db-data-wrap">
                     <table className="db-table">
                       <thead>
                         <tr>
-                          {columns.map(c => <th key={c.Field}>{c.Field}</th>)}
+                          {columns.map(c => <th key={c.Field}>{c.Field}{c.Key === 'PRI' ? ' *' : ''}</th>)}
                         </tr>
                       </thead>
                       <tbody>
                         {data.map((row, i) => (
                           <tr key={i}>
                             {columns.map(c => (
-                              <td key={c.Field}>{row[c.Field] !== null ? String(row[c.Field]) : <i style={{ color: '#ccc' }}>NULL</i>}</td>
+                              <td
+                                key={c.Field}
+                                className="db-cell"
+                                onClick={() => startEdit(i, c.Field)}
+                              >
+                                {editingCell?.rowIdx === i && editingCell?.colName === c.Field ? (
+                                  <input
+                                    className="db-cell-input"
+                                    value={editValue}
+                                    onChange={e => setEditValue(e.target.value)}
+                                    onBlur={saveEdit}
+                                    onKeyDown={handleCellKeyDown}
+                                    autoFocus
+                                  />
+                                ) : (
+                                  row[c.Field] !== null ? String(row[c.Field]) : <i style={{ color: '#ccc' }}>NULL</i>
+                                )}
+                              </td>
                             ))}
                           </tr>
                         ))}
