@@ -77,7 +77,7 @@ function parseLocalDate(dateStr) {
 
 function formatTotal(cost, hours) {
   if (cost > 0 || hours > 0) {
-    return `${cost.toLocaleString('ru-RU')} ₽ | ${hours.toFixed(1)} ч`;
+    return `${hours.toFixed(1)} ч | ${cost.toLocaleString('ru-RU')} ₽`;
   }
   return '';
 }

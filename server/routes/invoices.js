@@ -147,6 +147,16 @@ router.put('/:id', async (req, res) => {
           SELECT task_id FROM invoice_tasks WHERE invoice_id = ?
         )
       `, [id]);
+    } else if (status === 'draft' && invoiceRows[0].status === 'paid') {
+      await pool.execute(
+        'UPDATE invoices SET status = ?, paid_at = NULL WHERE id = ?',
+        [status, id]
+      );
+      await pool.execute(`
+        UPDATE tasks SET paid = 0 WHERE id IN (
+          SELECT task_id FROM invoice_tasks WHERE invoice_id = ?
+        )
+      `, [id]);
     } else {
       await pool.execute('UPDATE invoices SET status = ? WHERE id = ?', [status, id]);
     }

@@ -89,6 +89,21 @@ export function FinanceBoard({ onEditTask, customers }) {
     }
   }
 
+  async function handleUnmarkPaid() {
+    if (!editingInvoice?.id) return;
+    if (!confirm('Отменить оплату счёта? Все задачи будут помечены как неоплаченные.')) return;
+    setSaving(true);
+    try {
+      const updated = await api.invoices.update(editingInvoice.id, { status: 'draft' });
+      setEditingInvoice(prev => prev && { ...prev, status: updated.status, paid_at: null });
+      setInvoices(prev => prev.map(i => i.id === updated.id ? updated : i));
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function handleDeleteInvoice(id) {
     if (!confirm('Удалить счёт?')) return;
     try {
@@ -220,8 +235,8 @@ export function FinanceBoard({ onEditTask, customers }) {
                         <tr>
                           <th>Задача</th>
                           <th>Стадия</th>
-                          <th>Стоимость</th>
                           <th>Часы</th>
+                          <th>Стоимость</th>
                           <th>Оплачено</th>
                         </tr>
                       </thead>
@@ -230,8 +245,8 @@ export function FinanceBoard({ onEditTask, customers }) {
                           <tr key={task.id} className="task-row" onClick={() => onEditTask?.(task)}>
                             <td>{task.title}</td>
                             <td><span className={`stage-badge ${task.stage}`}>{task.stage}</span></td>
-                            <td>{parseFloat(task.cost || 0).toLocaleString('ru-RU')} ₽</td>
                             <td>{parseFloat(task.hours || 0).toFixed(1)} ч</td>
+                            <td>{parseFloat(task.cost || 0).toLocaleString('ru-RU')} ₽</td>
                             <td>{task.paid ? 'Да' : 'Нет'}</td>
                           </tr>
                         ))}
@@ -243,20 +258,26 @@ export function FinanceBoard({ onEditTask, customers }) {
 
                     {editingInvoice.tasks?.length > 0 && (
                       <div style={{ padding: '12px 0', fontWeight: 600, textAlign: 'right' }}>
-                        Итого: {editingInvoice.tasks.reduce((s, t) => s + parseFloat(t.cost || 0), 0).toLocaleString('ru-RU')} ₽ |{' '}
-                        {editingInvoice.tasks.reduce((s, t) => s + parseFloat(t.hours || 0), 0).toFixed(1)} ч
+                        Итого: {editingInvoice.tasks.reduce((s, t) => s + parseFloat(t.hours || 0), 0).toFixed(1)} ч |{' '}
+                        {editingInvoice.tasks.reduce((s, t) => s + parseFloat(t.cost || 0), 0).toLocaleString('ru-RU')} ₽
                       </div>
                     )}
                   </div>
                 )}
 
-                {editingInvoice.status !== 'paid' && (
+                {editingInvoice.status !== 'paid' ? (
                   <div className="modal-actions">
                     <button type="button" className="btn-delete-task" onClick={() => handleDeleteInvoice(editingInvoice.id)}>
                       Удалить счёт
                     </button>
                     <button type="button" className="btn-save" onClick={handleMarkPaid} disabled={saving}>
                       Отметить оплату
+                    </button>
+                  </div>
+                ) : (
+                  <div className="modal-actions">
+                    <button type="button" className="btn-cancel" onClick={handleUnmarkPaid} disabled={saving}>
+                      Отменить оплату
                     </button>
                   </div>
                 )}
