@@ -988,6 +988,7 @@ body {
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  table-layout: fixed;
 }
 
 .finance-table th {
@@ -997,11 +998,15 @@ body {
   font-weight: 600;
   color: #666;
   font-size: 13px;
+  white-space: nowrap;
 }
 
 .finance-table td {
   padding: 10px 12px;
   border-bottom: 1px solid #f0f0f0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .finance-table tr:hover {
