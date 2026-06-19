@@ -12,6 +12,7 @@ export function KanbanBoard({ tasks, customers, onAddTask, onEditTask, onDeleteT
         const stageTasks = tasks.filter(t => t.stage === stage.id);
         const totalCost = stageTasks.reduce((sum, t) => sum + (parseFloat(t.cost) || 0), 0);
         const totalHours = stageTasks.reduce((sum, t) => sum + (parseFloat(t.hours) || 0), 0);
+        const total = (totalCost > 0 || totalHours > 0) ? `${totalCost.toLocaleString('ru-RU')} ₽ | ${totalHours.toFixed(1)} ч` : '';
         
         return (
           <Column
@@ -20,7 +21,7 @@ export function KanbanBoard({ tasks, customers, onAddTask, onEditTask, onDeleteT
             title={stage.title}
             tasks={stageTasks}
             customers={customers}
-            total={totalCost + ' ₽ | ' + totalHours + ' ч'}
+            total={total}
             onAddTask={onAddTask}
             onEditTask={onEditTask}
             onDeleteTask={onDeleteTask}
