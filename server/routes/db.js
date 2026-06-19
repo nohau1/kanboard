@@ -7,6 +7,10 @@ const router = express.Router();
 router.use(authenticateToken);
 router.use(requireAdmin);
 
+function escId(name) {
+  return '`' + name.replace(/[`\\]/g, '') + '`';
+}
+
 router.get('/tables', async (req, res) => {
   try {
     const [rows] = await pool.execute('SHOW TABLES');
@@ -21,7 +25,7 @@ router.get('/tables', async (req, res) => {
 
 router.get('/columns/:table', async (req, res) => {
   try {
-    const [rows] = await pool.execute('SHOW COLUMNS FROM ??', [req.params.table]);
+    const [rows] = await pool.query(`SHOW COLUMNS FROM ${escId(req.params.table)}`);
     res.json(rows);
   } catch (err) {
     console.error(err);
@@ -33,7 +37,7 @@ router.get('/data/:table', async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 50;
     const offset = parseInt(req.query.offset) || 0;
-    const [rows] = await pool.query('SELECT * FROM ?? LIMIT ? OFFSET ?', [req.params.table, limit, offset]);
+    const [rows] = await pool.query(`SELECT * FROM ${escId(req.params.table)} LIMIT ${limit} OFFSET ${offset}`);
     res.json(rows);
   } catch (err) {
     console.error(err);
@@ -51,7 +55,7 @@ router.post('/query', async (req, res) => {
   }
 
   try {
-    const [rows] = await pool.execute(sql);
+    const [rows] = await pool.query(sql);
     res.json({ rows, affected: Array.isArray(rows) ? rows.length : rows.affectedRows });
   } catch (err) {
     res.status(400).json({ error: err.message });
