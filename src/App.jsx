@@ -354,7 +354,7 @@ export default function App() {
             onEditTask={handleEditTask}
           />
         ) : view === 'finances' ? (
-          <FinanceBoard onEditTask={handleEditTask} />
+          <FinanceBoard onEditTask={handleEditTask} customers={customers} />
         ) : (
           <DndContext
             sensors={sensors}

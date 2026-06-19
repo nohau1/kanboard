@@ -8,9 +8,8 @@ const STAGE_OPTIONS = [
   { id: 'todo', title: 'К выполнению' },
 ];
 
-export function FinanceBoard({ onEditTask }) {
+export function FinanceBoard({ onEditTask, customers }) {
   const [invoices, setInvoices] = useState([]);
-  const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingInvoice, setEditingInvoice] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -21,12 +20,8 @@ export function FinanceBoard({ onEditTask }) {
 
   async function loadData() {
     try {
-      const [inv, cust] = await Promise.all([
-        api.invoices.list(),
-        api.customers.list(),
-      ]);
+      const inv = await api.invoices.list();
       setInvoices(inv);
-      setCustomers(cust);
     } catch (err) {
       console.error(err);
     } finally {
