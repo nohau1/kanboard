@@ -18,6 +18,7 @@ import { TaskCard } from './components/TaskCard';
 import { TaskModal } from './components/TaskModal';
 import { Login } from './components/Login';
 import { AdminPanel } from './components/AdminPanel';
+import { DBTool } from './components/DBTool';
 import { Calendar } from './components/Calendar';
 import { FinanceBoard } from './components/FinanceBoard';
 import { api } from './api';
@@ -46,6 +47,7 @@ export default function App() {
   });
   const [modal, setModal] = useState(null);
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showDbtool, setShowDbtool] = useState(false);
   const [loading, setLoading] = useState(true);
   const hoverStageRef = useRef(null);
   const skipHashRef = useRef(false);
@@ -340,7 +342,10 @@ export default function App() {
           <div className="user-menu">
             <span className="username">{user.username}</span>
             {user.role === 'admin' && (
-              <button className="btn-admin" onClick={() => setShowAdmin(true)}>Админ</button>
+              <>
+                <button className="btn-admin" onClick={() => setShowAdmin(true)}>Админ</button>
+                <button className="btn-admin" onClick={() => setShowDbtool(true)}>БД</button>
+              </>
             )}
             <button className="btn-logout" onClick={handleLogout}>Выход</button>
           </div>
@@ -403,6 +408,8 @@ export default function App() {
       )}
 
       {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} onEditTask={handleEditTask} tasks={tasks} />}
+
+      {showDbtool && <DBTool onClose={() => setShowDbtool(false)} />}
     </div>
   );
 }

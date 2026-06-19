@@ -1020,3 +1020,72 @@ body {
 .paid-row td {
   color: #52c41a;
 }
+
+.modal-dbtool {
+  width: 1000px;
+  max-width: 95vw;
+  max-height: 85vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.db-tables-list {
+  min-width: 160px;
+  max-height: 500px;
+  overflow-y: auto;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  background: #fafafa;
+}
+
+.db-table-item {
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: monospace;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.db-table-item:hover {
+  background: #e6f7ff;
+}
+
+.db-table-item.selected {
+  background: #1890ff;
+  color: white;
+}
+
+.db-data-wrap {
+  max-height: 400px;
+  overflow: auto;
+}
+
+.db-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.db-table th {
+  background: #f5f5f5;
+  padding: 6px 8px;
+  text-align: left;
+  font-weight: 600;
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+}
+
+.db-table td {
+  padding: 4px 8px;
+  border-bottom: 1px solid #f0f0f0;
+  white-space: nowrap;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.db-table tr:hover td {
+  background: #fafafa;
+}
