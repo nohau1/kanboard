@@ -57,4 +57,13 @@ export const api = {
     update: (id, data) => request(`/api/users/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     delete: (id) => request(`/api/users/${id}`, { method: 'DELETE' }),
   },
+  invoices: {
+    list: () => request('/api/invoices'),
+    get: (id) => request(`/api/invoices/${id}`),
+    create: (data) => request('/api/invoices', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id, data) => request(`/api/invoices/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    delete: (id) => request(`/api/invoices/${id}`, { method: 'DELETE' }),
+    getTasks: (id) => request(`/api/invoices/${id}/tasks`),
+    fill: (id, data) => request(`/api/invoices/${id}/fill`, { method: 'POST', body: JSON.stringify(data) }),
+  },
 };

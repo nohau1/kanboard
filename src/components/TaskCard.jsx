@@ -82,7 +82,11 @@ export function TaskCard({ task, customerName, onEdit, onDelete }) {
           <div className="task-stats">
             {task.cost > 0 && <span>{parseFloat(task.cost).toLocaleString('ru-RU')} ₽</span>}
             {task.hours > 0 && <span>{parseFloat(task.hours).toFixed(1)} ч</span>}
+            {task.paid ? <span className="task-paid-badge">оплачено</span> : null}
           </div>
+        )}
+        {task.paid && !task.cost && !task.hours && (
+          <div className="task-stats"><span className="task-paid-badge">оплачено</span></div>
         )}
       </div>
     </div>

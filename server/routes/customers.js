@@ -29,7 +29,7 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/', requireAdmin, async (req, res) => {
-  const { name } = req.body;
+  const { name, inn, legal_name, address, phone } = req.body;
   
   if (!name) {
     return res.status(400).json({ error: 'Укажите название' });
@@ -38,7 +38,10 @@ router.post('/', requireAdmin, async (req, res) => {
   const id = 'c' + Date.now();
   
   try {
-    await pool.execute('INSERT INTO customers (id, name) VALUES (?, ?)', [id, name]);
+    await pool.execute(
+      'INSERT INTO customers (id, name, inn, legal_name, address, phone) VALUES (?, ?, ?, ?, ?, ?)',
+      [id, name, inn || null, legal_name || null, address || null, phone || null]
+    );
     const [rows] = await pool.execute('SELECT * FROM customers WHERE id = ?', [id]);
     res.status(201).json(rows[0]);
   } catch (err) {
@@ -49,10 +52,13 @@ router.post('/', requireAdmin, async (req, res) => {
 
 router.put('/:id', requireAdmin, async (req, res) => {
   const { id } = req.params;
-  const { name } = req.body;
+  const { name, inn, legal_name, address, phone } = req.body;
   
   try {
-    await pool.execute('UPDATE customers SET name = ? WHERE id = ?', [name, id]);
+    await pool.execute(
+      'UPDATE customers SET name = ?, inn = ?, legal_name = ?, address = ?, phone = ? WHERE id = ?',
+      [name, inn || null, legal_name || null, address || null, phone || null, id]
+    );
     const [rows] = await pool.execute('SELECT * FROM customers WHERE id = ?', [id]);
     res.json(rows[0]);
   } catch (err) {

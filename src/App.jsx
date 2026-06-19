@@ -19,6 +19,7 @@ import { TaskModal } from './components/TaskModal';
 import { Login } from './components/Login';
 import { AdminPanel } from './components/AdminPanel';
 import { Calendar } from './components/Calendar';
+import { FinanceBoard } from './components/FinanceBoard';
 import { api } from './api';
 import { stages } from './data';
 import './App.css';
@@ -39,6 +40,7 @@ export default function App() {
     const hash = window.location.hash.replace('#', '');
     if (hash === 'customers') return 'customers';
     if (hash === 'calendar') return 'calendar';
+    if (hash === 'finances') return 'finances';
     if (hash.startsWith('task/')) return 'stages';
     return 'stages';
   });
@@ -89,6 +91,7 @@ export default function App() {
       }
       if (hash === 'customers') setView('customers');
       else if (hash === 'calendar') setView('calendar');
+      else if (hash === 'finances') setView('finances');
       else setView('stages');
     }
     window.addEventListener('hashchange', handleHashChange);
@@ -321,6 +324,15 @@ export default function App() {
             >
               Календарь
             </button>
+            <button
+              className={view === 'finances' ? 'active' : ''}
+              onClick={() => {
+                setView('finances');
+                window.location.hash = 'finances';
+              }}
+            >
+              Финансы
+            </button>
           </div>
           <button className="btn-add-header" onClick={() => handleAddTask('todo', 'stage')}>
             + Новая задача
@@ -341,6 +353,8 @@ export default function App() {
             customers={customers}
             onEditTask={handleEditTask}
           />
+        ) : view === 'finances' ? (
+          <FinanceBoard onEditTask={handleEditTask} />
         ) : (
           <DndContext
             sensors={sensors}

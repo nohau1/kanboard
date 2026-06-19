@@ -292,21 +292,40 @@ function UserForm({ user, customers, onSave, onCancel }) {
 
 function CustomerForm({ customer, onSave, onCancel }) {
   const [name, setName] = useState(customer?.name || '');
+  const [inn, setInn] = useState(customer?.inn || '');
+  const [legal_name, setLegalName] = useState(customer?.legal_name || '');
+  const [address, setAddress] = useState(customer?.address || '');
+  const [phone, setPhone] = useState(customer?.phone || '');
 
   function handleSubmit(e) {
     e.preventDefault();
-    onSave({ name });
+    onSave({ name, inn, legal_name, address, phone });
   }
 
   return (
-    <form className="inline-form" onSubmit={handleSubmit}>
-      <input
-        type="text"
-        placeholder="Название заказчика"
-        value={name}
-        onChange={e => setName(e.target.value)}
-        required
-      />
+    <form className="customer-form" onSubmit={handleSubmit}>
+      <div className="form-group">
+        <label>Название</label>
+        <input type="text" value={name} onChange={e => setName(e.target.value)} required />
+      </div>
+      <div className="form-group">
+        <label>Юридическое название</label>
+        <input type="text" value={legal_name} onChange={e => setLegalName(e.target.value)} />
+      </div>
+      <div className="form-row">
+        <div className="form-group">
+          <label>ИНН</label>
+          <input type="text" value={inn} onChange={e => setInn(e.target.value)} />
+        </div>
+        <div className="form-group">
+          <label>Телефон</label>
+          <input type="text" value={phone} onChange={e => setPhone(e.target.value)} />
+        </div>
+      </div>
+      <div className="form-group">
+        <label>Адрес</label>
+        <input type="text" value={address} onChange={e => setAddress(e.target.value)} />
+      </div>
       <div className="form-actions">
         <button type="submit">Сохранить</button>
         <button type="button" className="btn-cancel" onClick={onCancel}>Отмена</button>

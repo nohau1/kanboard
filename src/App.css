@@ -243,6 +243,11 @@ body {
   font-weight: 500;
 }
 
+.task-paid-badge {
+  color: #52c41a;
+  font-size: 11px;
+}
+
 .task-actions {
   display: none;
   gap: 4px;
@@ -950,4 +955,56 @@ body {
     min-height: 60px;
     padding: 4px;
   }
+}
+
+.finance-board {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.finance-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.finance-header h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.finance-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.finance-table th {
+  background: #f5f5f5;
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #666;
+  font-size: 13px;
+}
+
+.finance-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.finance-table tr:hover {
+  background: #fafafa;
+}
+
+.paid-row {
+  background: #f6ffed;
+}
+
+.paid-row td {
+  color: #52c41a;
 }

@@ -29,6 +29,10 @@ async function initDb() {
       CREATE TABLE IF NOT EXISTS customers (
         id VARCHAR(50) PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
+        inn VARCHAR(20),
+        legal_name VARCHAR(500),
+        address VARCHAR(500),
+        phone VARCHAR(100),
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
@@ -55,6 +59,7 @@ async function initDb() {
         cost DECIMAL(12,2) DEFAULT 0,
         hours DECIMAL(8,2) DEFAULT 0,
         description TEXT,
+        paid TINYINT(1) DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
@@ -85,6 +90,38 @@ async function initDb() {
     } catch (e) {
       if (!e.message.includes('Duplicate')) console.log('description column check done');
     }
+
+    try {
+      await connection.execute('ALTER TABLE tasks ADD COLUMN paid TINYINT(1) DEFAULT 0');
+    } catch (e) {
+      if (!e.message.includes('Duplicate')) console.log('paid column check done');
+    }
+
+    try { await connection.execute('ALTER TABLE customers ADD COLUMN inn VARCHAR(20)'); } catch (e) { if (!e.message.includes('Duplicate')) console.log('inn column check done'); }
+    try { await connection.execute('ALTER TABLE customers ADD COLUMN legal_name VARCHAR(500)'); } catch (e) { if (!e.message.includes('Duplicate')) console.log('legal_name column check done'); }
+    try { await connection.execute('ALTER TABLE customers ADD COLUMN address VARCHAR(500)'); } catch (e) { if (!e.message.includes('Duplicate')) console.log('address column check done'); }
+    try { await connection.execute('ALTER TABLE customers ADD COLUMN phone VARCHAR(100)'); } catch (e) { if (!e.message.includes('Duplicate')) console.log('phone column check done'); }
+
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS invoices (
+        id VARCHAR(50) PRIMARY KEY,
+        customer_id VARCHAR(50) NOT NULL,
+        status VARCHAR(20) DEFAULT 'draft',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        paid_at DATETIME,
+        FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
+      )
+    `);
+
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS invoice_tasks (
+        invoice_id VARCHAR(50) NOT NULL,
+        task_id VARCHAR(50) NOT NULL,
+        PRIMARY KEY (invoice_id, task_id),
+        FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE,
+        FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE
+      )
+    `);
 
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS attachments (
