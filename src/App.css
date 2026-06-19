@@ -449,6 +449,13 @@ body {
   overflow-y: auto;
 }
 
+.modal-xlarge {
+  width: 950px;
+  max-width: 95vw;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
 .form-group textarea {
   width: 100%;
   padding: 8px 12px;

@@ -147,7 +147,7 @@ export function FinanceBoard({ onEditTask, customers }) {
 
       {editingInvoice && (
         <div className="modal-overlay" onMouseDown={() => {}}>
-          <div className="modal modal-large" onMouseDown={e => e.stopPropagation()}>
+          <div className="modal modal-xlarge" onMouseDown={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{editingInvoice.isNew ? (editingInvoice.id ? 'Новый счёт' : 'Новый счёт') : 'Счёт #' + editingInvoice.id}</h2>
               <button type="button" className="btn-cancel" onClick={handleCloseForm}>Закрыть</button>
@@ -186,32 +186,30 @@ export function FinanceBoard({ onEditTask, customers }) {
                 </div>
 
                 {editingInvoice.status !== 'paid' && (
-                  <div className="form-row" style={{ marginBottom: 16, alignItems: 'flex-end' }}>
-                    <div className="form-group">
-                      <label>Стадии задач для счёта</label>
-                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', padding: '8px 0' }}>
-                        {STAGE_OPTIONS.map(s => (
-                          <label key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 14, cursor: 'pointer' }}>
-                            <input
-                              type="checkbox"
-                              checked={editingInvoice.stages?.includes(s.id)}
-                              onChange={() => {
-                                setEditingInvoice(prev => ({
-                                  ...prev,
-                                  stages: prev.stages?.includes(s.id)
-                                    ? prev.stages.filter(x => x !== s.id)
-                                    : [...(prev.stages || []), s.id]
-                                }));
-                              }}
-                            />
-                            {s.title}
-                          </label>
-                        ))}
-                      </div>
+                  <div style={{ marginBottom: 16 }}>
+                    <label style={{ display: 'block', marginBottom: 6, fontSize: 14, color: '#666' }}>Стадии задач для счёта</label>
+                    <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                      {STAGE_OPTIONS.map(s => (
+                        <label key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 14, cursor: 'pointer' }}>
+                          <input
+                            type="checkbox"
+                            checked={editingInvoice.stages?.includes(s.id)}
+                            onChange={() => {
+                              setEditingInvoice(prev => ({
+                                ...prev,
+                                stages: prev.stages?.includes(s.id)
+                                  ? prev.stages.filter(x => x !== s.id)
+                                  : [...(prev.stages || []), s.id]
+                              }));
+                            }}
+                          />
+                          {s.title}
+                        </label>
+                      ))}
+                      <button className="btn-save" onClick={handleFill} disabled={saving} style={{ marginLeft: 'auto' }}>
+                        {saving ? '...' : 'Заполнить'}
+                      </button>
                     </div>
-                    <button className="btn-save" onClick={handleFill} disabled={saving}>
-                      {saving ? '...' : 'Заполнить'}
-                    </button>
                   </div>
                 )}
 
