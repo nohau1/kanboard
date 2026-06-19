@@ -97,19 +97,36 @@ router.post('/:id/fill', async (req, res) => {
     if (invoiceRows.length === 0) return res.status(404).json({ error: 'Счёт не найден' });
     const invoice = invoiceRows[0];
 
-    await pool.execute('DELETE FROM invoice_tasks WHERE invoice_id = ?', [req.params.id]);
-
     const placeholders = stages.map(() => '?').join(',');
     const [taskRows] = await pool.execute(`
-      SELECT t.* FROM tasks t
-      LEFT JOIN invoice_tasks it ON t.id = it.task_id
-      WHERE t.customer_id = ? AND t.stage IN (${placeholders}) AND t.paid = 0 AND it.task_id IS NULL
-    `, [invoice.customer_id, ...stages]);
+      SELECT t.*, c.name as customer_name FROM tasks t
+      LEFT JOIN customers c ON t.customer_id = c.id
+      WHERE t.customer_id = ? AND t.stage IN (${placeholders}) AND t.paid = 0
+      AND t.id NOT IN (SELECT task_id FROM invoice_tasks WHERE invoice_id = ?)
+      ORDER BY t.stage, t.position
+    `, [invoice.customer_id, ...stages, req.params.id]);
 
-    for (const task of taskRows) {
+    res.json(taskRows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Ошибка при заполнении счёта' });
+  }
+});
+
+router.put('/:id/save', async (req, res) => {
+  const { taskIds } = req.body;
+  if (!taskIds) return res.status(400).json({ error: 'Укажите taskIds' });
+
+  try {
+    const [inv] = await pool.execute('SELECT * FROM invoices WHERE id = ?', [req.params.id]);
+    if (inv.length === 0) return res.status(404).json({ error: 'Счёт не найден' });
+
+    await pool.execute('DELETE FROM invoice_tasks WHERE invoice_id = ?', [req.params.id]);
+
+    for (const taskId of taskIds) {
       await pool.execute(
         'INSERT INTO invoice_tasks (invoice_id, task_id) VALUES (?, ?)',
-        [req.params.id, task.id]
+        [req.params.id, taskId]
       );
     }
 
@@ -125,7 +142,20 @@ router.post('/:id/fill', async (req, res) => {
     res.json(tasks);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Ошибка при заполнении счёта' });
+    res.status(500).json({ error: 'Ошибка при сохранении' });
+  }
+});
+
+router.delete('/:id/tasks/:taskId', async (req, res) => {
+  try {
+    await pool.execute(
+      'DELETE FROM invoice_tasks WHERE invoice_id = ? AND task_id = ?',
+      [req.params.id, req.params.taskId]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Ошибка при удалении' });
   }
 });
 

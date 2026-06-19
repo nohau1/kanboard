@@ -12,7 +12,9 @@ export function FinanceBoard({ onEditTask, customers }) {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingInvoice, setEditingInvoice] = useState(null);
+  const [invoiceTasks, setInvoiceTasks] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -30,17 +32,20 @@ export function FinanceBoard({ onEditTask, customers }) {
   }
 
   function handleCreate() {
-    setEditingInvoice({ isNew: true, customer_id: '', stages: ['testing', 'done'], tasks: [] });
-  }
-
-  function handleEdit(invoice) {
-    setEditingInvoice({ ...invoice, tasks: null });
+    setEditingInvoice({ isNew: true, customer_id: '', stages: ['testing', 'done'] });
+    setInvoiceTasks([]);
+    setSaved(false);
   }
 
   async function handleOpenInvoice(invoice) {
-    setEditingInvoice({ ...invoice, tasks: null });
-    const tasks = await api.invoices.getTasks(invoice.id);
-    setEditingInvoice(prev => prev && { ...prev, tasks });
+    setEditingInvoice({ ...invoice });
+    try {
+      const tasks = await api.invoices.getTasks(invoice.id);
+      setInvoiceTasks(tasks);
+    } catch (err) {
+      console.error(err);
+    }
+    setSaved(true);
   }
 
   async function handleFill() {
@@ -50,7 +55,8 @@ export function FinanceBoard({ onEditTask, customers }) {
       const tasks = await api.invoices.fill(editingInvoice.id, {
         stages: editingInvoice.stages
       });
-      setEditingInvoice(prev => prev && { ...prev, tasks });
+      setInvoiceTasks(tasks);
+      setSaved(false);
     } catch (err) {
       alert(err.message);
     } finally {
@@ -66,12 +72,33 @@ export function FinanceBoard({ onEditTask, customers }) {
     setSaving(true);
     try {
       const created = await api.invoices.create({ customer_id: editingInvoice.customer_id });
-      setEditingInvoice({ ...created, stages: ['testing', 'done'], tasks: [], isNew: true });
+      setEditingInvoice({ ...created, stages: ['testing', 'done'] });
+      setInvoiceTasks([]);
+      setSaved(false);
     } catch (err) {
       alert(err.message);
     } finally {
       setSaving(false);
     }
+  }
+
+  async function handleSave() {
+    if (!editingInvoice?.id) return;
+    setSaving(true);
+    try {
+      const taskIds = invoiceTasks.map(t => t.id);
+      await api.invoices.save(editingInvoice.id, { taskIds });
+      setSaved(true);
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleRemoveTask(taskId) {
+    setInvoiceTasks(prev => prev.filter(t => t.id !== taskId));
+    setSaved(false);
   }
 
   async function handleMarkPaid() {
@@ -117,6 +144,7 @@ export function FinanceBoard({ onEditTask, customers }) {
 
   function handleCloseForm() {
     setEditingInvoice(null);
+    setInvoiceTasks([]);
     loadData();
   }
 
@@ -145,7 +173,7 @@ export function FinanceBoard({ onEditTask, customers }) {
             <tr key={inv.id} className={inv.status === 'paid' ? 'paid-row' : ''}>
               <td className="link" onClick={() => handleOpenInvoice(inv)}>Счёт #{inv.id}</td>
               <td>{inv.customer_name}</td>
-              <td>{inv.status === 'paid' ? 'Оплачен' : 'Черновик'}</td>
+              <td>{inv.status === 'paid' ? 'Оплачен' : inv.status === 'draft' ? 'Черновик' : inv.status}</td>
               <td>{new Date(inv.created_at).toLocaleDateString('ru-RU')}</td>
               <td>{inv.paid_at ? new Date(inv.paid_at).toLocaleDateString('ru-RU') : '—'}</td>
               <td>
@@ -164,11 +192,11 @@ export function FinanceBoard({ onEditTask, customers }) {
         <div className="modal-overlay" onMouseDown={() => {}}>
           <div className="modal modal-xlarge" onMouseDown={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>{editingInvoice.isNew ? (editingInvoice.id ? 'Новый счёт' : 'Новый счёт') : 'Счёт #' + editingInvoice.id}</h2>
+              <h2>{editingInvoice.id ? 'Счёт #' + editingInvoice.id : 'Новый счёт'}</h2>
               <button type="button" className="btn-cancel" onClick={handleCloseForm}>Закрыть</button>
             </div>
 
-            {(!editingInvoice.id && editingInvoice.isNew) ? (
+            {!editingInvoice.id ? (
               <div className="form-group">
                 <label>Заказчик</label>
                 {customers.length === 0 ? (
@@ -185,7 +213,7 @@ export function FinanceBoard({ onEditTask, customers }) {
                   </>
                 )}
               </div>
-            ) : editingInvoice.id && (
+            ) : (
               <div>
                 <div className="form-row" style={{ marginBottom: 16 }}>
                   <div className="form-group">
@@ -196,6 +224,7 @@ export function FinanceBoard({ onEditTask, customers }) {
                     <label>Статус</label>
                     <div style={{ padding: '8px 0' }}>
                       {editingInvoice.status === 'paid' ? 'Оплачен' + (editingInvoice.paid_at ? ' ' + new Date(editingInvoice.paid_at).toLocaleDateString('ru-RU') : '') : 'Черновик'}
+                      {!saved && editingInvoice.status !== 'paid' && <span style={{ color: '#faad14', marginLeft: 8, fontSize: 12 }}>не сохранён</span>}
                     </div>
                   </div>
                 </div>
@@ -228,53 +257,61 @@ export function FinanceBoard({ onEditTask, customers }) {
                   </div>
                 )}
 
-                {editingInvoice.tasks !== null && (
-                  <div>
-                    <table className="finance-table">
-                      <thead>
-                        <tr>
-                          <th>Задача</th>
-                          <th>Стадия</th>
-                          <th>Часы</th>
-                          <th>Стоимость</th>
-                          <th>Оплачено</th>
+                <div>
+                  <table className="finance-table">
+                    <thead>
+                      <tr>
+                        <th>Задача</th>
+                        <th>Стадия</th>
+                        <th>Часы</th>
+                        <th>Стоимость</th>
+                        <th style={{ width: 40 }}></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {invoiceTasks.map(task => (
+                        <tr key={task.id} className="task-row">
+                          <td onClick={() => onEditTask?.(task)} style={{ cursor: 'pointer' }}>{task.title}</td>
+                          <td><span className={`stage-badge ${task.stage}`}>{task.stage}</span></td>
+                          <td>{parseFloat(task.hours || 0).toFixed(1)} ч</td>
+                          <td>{parseFloat(task.cost || 0).toLocaleString('ru-RU')} ₽</td>
+                          <td>
+                            {editingInvoice.status !== 'paid' && (
+                              <button className="btn-icon btn-delete" onClick={() => handleRemoveTask(task.id)}>✕</button>
+                            )}
+                          </td>
                         </tr>
-                      </thead>
-                      <tbody>
-                        {editingInvoice.tasks?.map(task => (
-                          <tr key={task.id} className="task-row" onClick={() => onEditTask?.(task)}>
-                            <td>{task.title}</td>
-                            <td><span className={`stage-badge ${task.stage}`}>{task.stage}</span></td>
-                            <td>{parseFloat(task.hours || 0).toFixed(1)} ч</td>
-                            <td>{parseFloat(task.cost || 0).toLocaleString('ru-RU')} ₽</td>
-                            <td>{task.paid ? 'Да' : 'Нет'}</td>
-                          </tr>
-                        ))}
-                        {(!editingInvoice.tasks || editingInvoice.tasks.length === 0) && (
-                          <tr><td colSpan={5} style={{ textAlign: 'center', color: '#999' }}>Нет задач. Нажмите «Заполнить».</td></tr>
-                        )}
-                      </tbody>
-                    </table>
+                      ))}
+                      {invoiceTasks.length === 0 && (
+                        <tr><td colSpan={5} style={{ textAlign: 'center', color: '#999' }}>Нет задач. Нажмите «Заполнить».</td></tr>
+                      )}
+                    </tbody>
+                  </table>
 
-                    {editingInvoice.tasks?.length > 0 && (
-                      <div style={{ padding: '12px 0', fontWeight: 600, textAlign: 'right' }}>
-                        Итого: {editingInvoice.tasks.reduce((s, t) => s + parseFloat(t.hours || 0), 0).toFixed(1)} ч |{' '}
-                        {editingInvoice.tasks.reduce((s, t) => s + parseFloat(t.cost || 0), 0).toLocaleString('ru-RU')} ₽
-                      </div>
-                    )}
-                  </div>
-                )}
+                  {invoiceTasks.length > 0 && (
+                    <div style={{ padding: '12px 0', fontWeight: 600, textAlign: 'right' }}>
+                      Итого: {invoiceTasks.reduce((s, t) => s + parseFloat(t.hours || 0), 0).toFixed(1)} ч |{' '}
+                      {invoiceTasks.reduce((s, t) => s + parseFloat(t.cost || 0), 0).toLocaleString('ru-RU')} ₽
+                    </div>
+                  )}
+                </div>
 
-                {editingInvoice.status !== 'paid' ? (
+                {editingInvoice.status !== 'paid' && (
                   <div className="modal-actions">
                     <button type="button" className="btn-delete-task" onClick={() => handleDeleteInvoice(editingInvoice.id)}>
                       Удалить счёт
                     </button>
-                    <button type="button" className="btn-save" onClick={handleMarkPaid} disabled={saving}>
-                      Отметить оплату
-                    </button>
+                    <div className="modal-actions-right">
+                      <button type="button" className="btn-save" onClick={handleSave} disabled={saving || saved}>
+                        {saved ? 'Сохранено' : 'Сохранить'}
+                      </button>
+                      <button type="button" className="btn-save" onClick={handleMarkPaid} disabled={saving || !saved}>
+                        Оплатить
+                      </button>
+                    </div>
                   </div>
-                ) : (
+                )}
+                {editingInvoice.status === 'paid' && (
                   <div className="modal-actions">
                     <button type="button" className="btn-cancel" onClick={handleUnmarkPaid} disabled={saving}>
                       Отменить оплату

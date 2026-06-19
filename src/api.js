@@ -65,5 +65,7 @@ export const api = {
     delete: (id) => request(`/api/invoices/${id}`, { method: 'DELETE' }),
     getTasks: (id) => request(`/api/invoices/${id}/tasks`),
     fill: (id, data) => request(`/api/invoices/${id}/fill`, { method: 'POST', body: JSON.stringify(data) }),
+    save: (id, data) => request(`/api/invoices/${id}/save`, { method: 'PUT', body: JSON.stringify(data) }),
+    removeTask: (invoiceId, taskId) => request(`/api/invoices/${invoiceId}/tasks/${taskId}`, { method: 'DELETE' }),
   },
 };
