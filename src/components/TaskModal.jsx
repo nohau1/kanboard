@@ -258,6 +258,7 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
             <div className="datetime-picker">
               <input
                 type="datetime-local"
+                step="1800"
                 value={dueDate}
                 onChange={e => setDueDate(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && e.target.blur()}
