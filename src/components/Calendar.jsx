@@ -67,7 +67,8 @@ function parseLocalDate(dateStr) {
   if (parts.length >= 2) {
     const [year, month, day] = parts[0].split('-').map(Number);
     const [hours, minutes] = parts[1].split(':').map(Number);
-    date = new Date(year, month - 1, day, hours || 0, minutes || 0);
+    const rounded = minutes >= 45 ? 0 : minutes >= 15 ? 30 : 0;
+    date = new Date(year, month - 1, day, hours || 0, rounded);
   } else {
     date = new Date(dateStr);
   }
