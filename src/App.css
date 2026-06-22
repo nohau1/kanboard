@@ -363,6 +363,7 @@ body {
 .datetime-picker {
   display: flex;
   gap: 8px;
+  align-items: center;
 }
 
 .datetime-picker input {

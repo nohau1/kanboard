@@ -257,11 +257,23 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
             <label>Срок исполнения</label>
             <div className="datetime-picker">
               <input
-                type="datetime-local"
+                type="date"
+                value={dueDate ? dueDate.substring(0, 10) : ''}
+                onChange={e => {
+                  const d = e.target.value;
+                  setDueDate(d ? d + 'T' + (dueDate ? dueDate.substring(11, 16) : '12:00') : '');
+                }}
+              />
+              <input
+                type="time"
                 step="1800"
-                value={dueDate}
-                onChange={e => setDueDate(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && e.target.blur()}
+                value={dueDate ? dueDate.substring(11, 16) : ''}
+                onChange={e => {
+                  const t = e.target.value;
+                  if (t && dueDate) {
+                    setDueDate(dueDate.substring(0, 10) + 'T' + t);
+                  }
+                }}
               />
               <button
                 type="button"
