@@ -381,18 +381,15 @@ body {
 }
 
 .time-hour {
-  width: 40px;
-  padding: 6px 4px;
+  width: 50px;
+  padding: 6px 2px;
   border: none;
   text-align: center;
   font-size: 14px;
-  -moz-appearance: textfield;
-}
-
-.time-hour::-webkit-inner-spin-button,
-.time-hour::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+  font-family: monospace;
+  background: transparent;
+  outline: none;
+  cursor: pointer;
 }
 
 .min-btn {

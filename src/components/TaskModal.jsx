@@ -266,20 +266,19 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
                 style={{ flex: 1 }}
               />
               <div className="time-picker">
-                <input
-                  type="number"
+                <select
                   className="time-hour"
-                  min="0"
-                  max="23"
                   value={dueDate ? dueDate.substring(11, 13) : '12'}
                   onChange={e => {
-                    let h = e.target.value.padStart(2, '0');
-                    if (h < 0) h = '00';
-                    if (h > 23) h = '23';
+                    const h = e.target.value;
                     const m = dueDate ? dueDate.substring(14, 16) : '00';
                     setDueDate((dueDate ? dueDate.substring(0, 10) : new Date().toISOString().substring(0, 10)) + 'T' + h + ':' + m);
                   }}
-                />
+                >
+                  {Array.from({ length: 24 }, (_, i) => (
+                    <option key={i} value={String(i).padStart(2, '0')}>{String(i).padStart(2, '0')}</option>
+                  ))}
+                </select>
                 <span>:</span>
                 <button
                   type="button"
