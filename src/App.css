@@ -370,6 +370,51 @@ body {
   flex: 1;
 }
 
+.time-picker {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  padding: 0 6px;
+  background: white;
+}
+
+.time-hour {
+  width: 40px;
+  padding: 6px 4px;
+  border: none;
+  text-align: center;
+  font-size: 14px;
+  -moz-appearance: textfield;
+}
+
+.time-hour::-webkit-inner-spin-button,
+.time-hour::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.min-btn {
+  padding: 4px 8px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: monospace;
+}
+
+.min-btn:hover {
+  border-color: #1890ff;
+}
+
+.min-btn.active {
+  background: #1890ff;
+  border-color: #1890ff;
+  color: white;
+}
+
 .btn-datetime-ok {
   padding: 6px 12px;
   background: #1890ff;

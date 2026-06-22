@@ -263,26 +263,39 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
                   const d = e.target.value;
                   setDueDate(d ? d + 'T' + (dueDate ? dueDate.substring(11, 16) : '12:00') : '');
                 }}
+                style={{ flex: 1 }}
               />
-              <input
-                type="time"
-                step="1800"
-                value={dueDate ? dueDate.substring(11, 16) : ''}
-                onChange={e => {
-                  const t = e.target.value;
-                  if (t && dueDate) {
-                    setDueDate(dueDate.substring(0, 10) + 'T' + t);
-                  }
-                }}
-              />
-              <button
-                type="button"
-                className="btn-datetime-ok"
-                onClick={() => document.activeElement.blur()}
-                disabled={!dueDate}
-              >
-                OK
-              </button>
+              <div className="time-picker">
+                <input
+                  type="number"
+                  className="time-hour"
+                  min="0"
+                  max="23"
+                  value={dueDate ? dueDate.substring(11, 13) : '12'}
+                  onChange={e => {
+                    let h = e.target.value.padStart(2, '0');
+                    if (h < 0) h = '00';
+                    if (h > 23) h = '23';
+                    const m = dueDate ? dueDate.substring(14, 16) : '00';
+                    setDueDate((dueDate ? dueDate.substring(0, 10) : new Date().toISOString().substring(0, 10)) + 'T' + h + ':' + m);
+                  }}
+                />
+                <span>:</span>
+                <button
+                  type="button"
+                  className={'min-btn ' + (dueDate?.substring(14, 16) === '00' ? 'active' : '')}
+                  onClick={() => {
+                    if (dueDate) setDueDate(dueDate.substring(0, 14) + '00');
+                  }}
+                >00</button>
+                <button
+                  type="button"
+                  className={'min-btn ' + (dueDate?.substring(14, 16) === '30' ? 'active' : '')}
+                  onClick={() => {
+                    if (dueDate) setDueDate(dueDate.substring(0, 14) + '30');
+                  }}
+                >30</button>
+              </div>
             </div>
           </div>
           <div className="form-row">
