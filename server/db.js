@@ -124,6 +124,20 @@ async function initDb() {
     `);
 
     await connection.execute(`
+      CREATE TABLE IF NOT EXISTS task_history (
+        id VARCHAR(50) PRIMARY KEY,
+        task_id VARCHAR(50) NOT NULL,
+        user_id VARCHAR(50),
+        field VARCHAR(50) NOT NULL,
+        old_value VARCHAR(500),
+        new_value VARCHAR(500),
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+      )
+    `);
+
+    await connection.execute(`
       CREATE TABLE IF NOT EXISTS attachments (
         id VARCHAR(50) PRIMARY KEY,
         task_id VARCHAR(50) NOT NULL,

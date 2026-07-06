@@ -430,6 +430,60 @@ body {
   cursor: not-allowed;
 }
 
+.btn-history {
+  padding: 3px 8px;
+  background: none;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #666;
+  margin-top: 6px;
+}
+
+.btn-history:hover {
+  border-color: #1890ff;
+  color: #1890ff;
+}
+
+.history-panel {
+  background: #fafafa;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-bottom: 16px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.history-item {
+  display: flex;
+  gap: 12px;
+  padding: 4px 0;
+  font-size: 13px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.history-item:last-child {
+  border-bottom: none;
+}
+
+.history-date {
+  color: #999;
+  white-space: nowrap;
+  min-width: 130px;
+}
+
+.history-user {
+  color: #666;
+  font-weight: 500;
+  min-width: 80px;
+}
+
+.history-change {
+  color: #333;
+}
+
 .modal-actions {
   display: flex;
   justify-content: space-between;

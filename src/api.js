@@ -44,6 +44,7 @@ export const api = {
     update: (id, data) => request(`/api/tasks/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     reorder: (data) => request('/api/tasks/reorder', { method: 'POST', body: JSON.stringify(data) }),
     delete: (id) => request(`/api/tasks/${id}`, { method: 'DELETE' }),
+    history: (id) => request(`/api/tasks/${id}/history`),
   },
   customers: {
     list: () => request('/api/customers'),

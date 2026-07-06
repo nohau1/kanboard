@@ -2,6 +2,13 @@ import { useState, useEffect, useRef } from 'react';
 import { ImageWithAuth } from './ImageWithAuth';
 import { ImagePreview } from './ImagePreview';
 
+const STAGE_LABELS = {
+  'todo': 'К выполнению',
+  'in-progress': 'В работе',
+  'testing': 'Тестирование',
+  'done': 'Готово',
+};
+
 export function TaskModal({ task, customers, stages, initialStage, initialCustomer, onSave, onClose, onDelete }) {
   const [title, setTitle] = useState('');
   const [customerId, setCustomerId] = useState('');
@@ -17,6 +24,8 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
   const [blobUrls, setBlobUrls] = useState({});
   const [previewAttachment, setPreviewAttachment] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [history, setHistory] = useState([]);
   const fileInputRef = useRef(null);
   const textareaRef = useRef(null);
   const pendingPaste = useRef(null);
@@ -31,6 +40,7 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
       setHours(task.hours || '');
       setDescription(task.description || '');
       loadAttachments(task.id);
+      loadHistory(task.id);
     } else {
       setTitle('');
       setCustomerId(initialCustomer || customers[0]?.id || '');
@@ -40,6 +50,8 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
       setHours('');
       setDescription('');
       setAttachments([]);
+      setHistory([]);
+      setShowHistory(false);
     }
   }, [task, customers, stages, initialStage, initialCustomer]);
 
@@ -90,6 +102,20 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
       console.error('Failed to load attachments:', err);
     }
     setLoadingAttachments(false);
+  }
+
+  async function loadHistory(taskId) {
+    try {
+      const res = await fetch(`/api/tasks/${taskId}/history`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setHistory(data);
+      }
+    } catch (err) {
+      console.error('Failed to load history:', err);
+    }
   }
 
   function handlePaste(e) {
@@ -251,8 +277,28 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
                   <option key={s.id} value={s.id}>{s.title}</option>
                 ))}
               </select>
+              {task && (
+                <button type="button" className="btn-history" onClick={() => setShowHistory(!showHistory)}>
+                  {showHistory ? 'Скрыть историю' : 'История'}
+                </button>
+              )}
             </div>
           </div>
+          {showHistory && history.length > 0 && (
+            <div className="history-panel">
+              {history.map(h => (
+                <div key={h.id} className="history-item">
+                  <span className="history-date">{new Date(h.created_at).toLocaleString('ru-RU')}</span>
+                  <span className="history-user">{h.username || '—'}</span>
+                  <span className="history-change">
+                    {h.field === 'stage' && (
+                      <>{STAGE_LABELS[h.old_value] || h.old_value} → {STAGE_LABELS[h.new_value] || h.new_value}</>
+                    )}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
           <div className="form-group">
             <label>Срок исполнения</label>
             <div className="datetime-picker">

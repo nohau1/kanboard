@@ -116,6 +116,13 @@ router.put('/:id', async (req, res) => {
       'UPDATE tasks SET title = ?, stage = ?, customer_id = ?, position = ?, due_date = ?, cost = ?, hours = ?, description = ?, paid = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
       [title || task.title, newStage, customer_id || task.customer_id, newPosition, due_date !== undefined ? due_date : task.due_date, cost !== undefined ? cost : task.cost, hours !== undefined ? hours : task.hours, description !== undefined ? description : task.description, paid !== undefined ? (paid ? 1 : 0) : task.paid, id]
     );
+
+    if (newStage !== task.stage) {
+      await pool.execute(
+        'INSERT INTO task_history (id, task_id, user_id, field, old_value, new_value) VALUES (?, ?, ?, ?, ?, ?)',
+        ['h' + Date.now(), id, req.user.id, 'stage', task.stage, newStage]
+      );
+    }
     
     if (newStage !== task.stage || position !== undefined) {
       await pool.execute(
@@ -224,6 +231,21 @@ router.post('/reorder', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Ошибка при перемещении' });
+  }
+});
+
+router.get('/:id/history', async (req, res) => {
+  try {
+    const [rows] = await pool.execute(`
+      SELECT th.*, u.username FROM task_history th
+      LEFT JOIN users u ON th.user_id = u.id
+      WHERE th.task_id = ?
+      ORDER BY th.created_at DESC
+    `, [req.params.id]);
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Ошибка при получении истории' });
   }
 });
 
