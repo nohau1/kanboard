@@ -209,6 +209,13 @@ router.post('/reorder', async (req, res) => {
       [stage, newPosition, taskId]
     );
 
+    if (oldStage !== stage) {
+      await pool.execute(
+        'INSERT INTO task_history (id, task_id, user_id, field, old_value, new_value) VALUES (?, ?, ?, ?, ?, ?)',
+        ['h' + Date.now(), taskId, req.user.id, 'stage', task.stage, stage]
+      );
+    }
+
     let rows;
     if (req.user.role === 'admin') {
       [rows] = await pool.execute(`
