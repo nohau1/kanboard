@@ -39,7 +39,10 @@ export function FinanceBoard({ onEditTask, customers }) {
   }
 
   async function handleOpenInvoice(invoice) {
-    setEditingInvoice({ ...invoice });
+    const norm = { ...invoice };
+    if (norm.created_at) norm.created_at = norm.created_at.replace(' ', 'T');
+    if (norm.paid_at) norm.paid_at = norm.paid_at.replace(' ', 'T');
+    setEditingInvoice(norm);
     try {
       const tasks = await api.invoices.getTasks(invoice.id);
       setInvoiceTasks(tasks);
@@ -89,7 +92,13 @@ export function FinanceBoard({ onEditTask, customers }) {
     try {
       const taskIds = invoiceTasks.map(t => t.id);
       await api.invoices.save(editingInvoice.id, { taskIds });
-      setSaved(true);
+      if (editingInvoice.created_at || editingInvoice.paid_at) {
+        await api.invoices.update(editingInvoice.id, {
+          created_at: editingInvoice.created_at,
+          paid_at: editingInvoice.paid_at,
+        });
+      }
+      handleCloseForm();
     } catch (err) {
       alert(err.message);
     } finally {
@@ -107,9 +116,9 @@ export function FinanceBoard({ onEditTask, customers }) {
     if (!confirm('Отметить счёт как оплаченный? Все задачи в нём будут помечены оплаченными.')) return;
     setSaving(true);
     try {
-      const updated = await api.invoices.update(editingInvoice.id, { status: 'paid' });
-      setEditingInvoice(prev => prev && { ...prev, status: updated.status, paid_at: updated.paid_at });
+      const updated = await api.invoices.update(editingInvoice.id, { status: 'paid', created_at: editingInvoice.created_at, paid_at: editingInvoice.paid_at });
       setInvoices(prev => prev.map(i => i.id === updated.id ? updated : i));
+      handleCloseForm();
     } catch (err) {
       alert(err.message);
     } finally {
@@ -123,8 +132,8 @@ export function FinanceBoard({ onEditTask, customers }) {
     setSaving(true);
     try {
       const updated = await api.invoices.update(editingInvoice.id, { status: 'draft' });
-      setEditingInvoice(prev => prev && { ...prev, status: updated.status, paid_at: null });
       setInvoices(prev => prev.map(i => i.id === updated.id ? updated : i));
+      handleCloseForm();
     } catch (err) {
       alert(err.message);
     } finally {
@@ -190,7 +199,7 @@ export function FinanceBoard({ onEditTask, customers }) {
       </table>
 
       {editingInvoice && (
-        <div className="modal-overlay" onMouseDown={() => {}}>
+        <div className="modal-overlay" onMouseDown={handleCloseForm}>
           <div className="modal modal-xlarge" onMouseDown={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{editingInvoice.id ? 'Счёт #' + editingInvoice.id : 'Новый счёт'}</h2>
@@ -224,9 +233,27 @@ export function FinanceBoard({ onEditTask, customers }) {
                   <div className="form-group">
                     <label>Статус</label>
                     <div style={{ padding: '8px 0' }}>
-                      {editingInvoice.status === 'paid' ? 'Оплачен' + (editingInvoice.paid_at ? ' ' + new Date(editingInvoice.paid_at).toLocaleDateString('ru-RU') : '') : 'Черновик'}
+                      {editingInvoice.status === 'paid' ? 'Оплачен' : 'Черновик'}
                       {!saved && editingInvoice.status !== 'paid' && <span style={{ color: '#faad14', marginLeft: 8, fontSize: 12 }}>не сохранён</span>}
                     </div>
+                  </div>
+                </div>
+                <div className="form-row" style={{ marginBottom: 16 }}>
+                  <div className="form-group">
+                    <label>Дата создания</label>
+                    <input
+                      type="datetime-local"
+                      value={editingInvoice.created_at ? editingInvoice.created_at.substring(0, 16) : (editingInvoice.paid_at ? '' : new Date().toISOString().substring(0, 16))}
+                      onChange={e => setEditingInvoice(prev => ({ ...prev, created_at: e.target.value }))}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Дата оплаты</label>
+                    <input
+                      type="datetime-local"
+                      value={editingInvoice.paid_at ? editingInvoice.paid_at.substring(0, 16) : ''}
+                      onChange={e => setEditingInvoice(prev => ({ ...prev, paid_at: e.target.value }))}
+                    />
                   </div>
                 </div>
 

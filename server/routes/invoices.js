@@ -4,6 +4,11 @@ import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
+function formatSqlDate(val) {
+  if (!val) return null;
+  return val.replace('T', ' ') + ':00';
+}
+
 router.use(authenticateToken);
 
 router.get('/', async (req, res) => {
@@ -161,7 +166,7 @@ router.delete('/:id/tasks/:taskId', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
-  const { status } = req.body;
+  const { status, created_at, paid_at } = req.body;
 
   try {
     const [rows] = await pool.execute('SELECT * FROM invoices WHERE id = ?', [id]);
@@ -169,18 +174,18 @@ router.put('/:id', async (req, res) => {
 
     if (status === 'paid') {
       await pool.execute(
-        'UPDATE invoices SET status = ?, paid_at = NOW() WHERE id = ?',
-        [status, id]
+        'UPDATE invoices SET status = ?, paid_at = ?, created_at = ? WHERE id = ?',
+        [status, paid_at || new Date().toISOString().slice(0, 19).replace('T', ' '), created_at || rows[0].created_at, id]
       );
       await pool.execute(`
         UPDATE tasks SET paid = 1, stage = 'paid' WHERE id IN (
           SELECT task_id FROM invoice_tasks WHERE invoice_id = ?
         )
       `, [id]);
-    } else if (status === 'draft' && invoiceRows[0].status === 'paid') {
+    } else if (status === 'draft' && rows[0].status === 'paid') {
       await pool.execute(
-        'UPDATE invoices SET status = ?, paid_at = NULL WHERE id = ?',
-        [status, id]
+        'UPDATE invoices SET status = ?, paid_at = NULL, created_at = ? WHERE id = ?',
+        [status, created_at || null, id]
       );
       await pool.execute(`
         UPDATE tasks SET paid = 0, stage = 'done' WHERE id IN (
@@ -188,7 +193,12 @@ router.put('/:id', async (req, res) => {
         )
       `, [id]);
     } else {
-      await pool.execute('UPDATE invoices SET status = ? WHERE id = ?', [status, id]);
+      const fields = [];
+      const vals = [];
+      if (created_at) { fields.push('created_at = ?'); vals.push(formatSqlDate(created_at)); }
+      fields.push('status = ?'); vals.push(status);
+      vals.push(id);
+      await pool.execute(`UPDATE invoices SET ${fields.join(', ')} WHERE id = ?`, vals);
     }
 
     const [updated] = await pool.execute(
