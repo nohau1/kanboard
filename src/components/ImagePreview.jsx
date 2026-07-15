@@ -69,10 +69,9 @@ export function ImagePreview({ src, alt, onClose }) {
   function zoomOut() { setZoom(prev => Math.max(0.2, prev - 0.5)); }
   function zoomReset() { setZoom(1); setPan({ x: 0, y: 0 }); }
 
-  function handleClick(e) {
-    if (e.target === e.currentTarget) {
-      if (zoom > 1) { zoomReset(); } else { setZoom(2); }
-    }
+  function handleImageClick(e) {
+    e.stopPropagation();
+    if (zoom > 1) { zoomReset(); } else { setZoom(2); }
   }
 
   return (
@@ -84,7 +83,6 @@ export function ImagePreview({ src, alt, onClose }) {
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
         onWheel={handleWheel}
-        onClick={handleClick}
         style={{ cursor: zoom > 1 ? (dragging ? 'grabbing' : 'grab') : 'zoom-in' }}
       >
         <button className="image-preview-close" onClick={onClose}>×</button>
@@ -100,6 +98,7 @@ export function ImagePreview({ src, alt, onClose }) {
             ref={imgRef}
             src={blobUrl}
             alt={alt}
+            onClick={handleImageClick}
             draggable={false}
             style={{
               transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
