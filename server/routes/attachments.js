@@ -1,5 +1,6 @@
 import express from 'express';
 import multer from 'multer';
+import sharp from 'sharp';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
@@ -9,6 +10,8 @@ import { authenticateToken } from '../middleware/auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+const THUMB_SIZE = 200;
 
 const router = express.Router();
 
@@ -29,15 +32,30 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
+function thumbPath(filename) {
+  return path.join(__dirname, '..', 'uploads', 'thumb_' + filename);
+}
+
+async function generateThumb(filePath) {
+  try {
+    await sharp(filePath)
+      .resize(THUMB_SIZE, THUMB_SIZE, { fit: 'inside', withoutEnlargement: true })
+      .toFile(thumbPath(path.basename(filePath)));
+  } catch (err) {
+    console.error('Thumb generation failed:', err.message);
+  }
+}
+
 router.get('/download/:id', async (req, res) => {
   try {
     const [rows] = await pool.execute('SELECT * FROM attachments WHERE id = ?', [req.params.id]);
-    if (rows.length === 0) {
-      return res.status(404).json({ error: 'Файл не найден' });
-    }
+    if (rows.length === 0) return res.status(404).json({ error: 'Файл не найден' });
     
     const attachment = rows[0];
-    const filePath = path.join(__dirname, '..', 'uploads', attachment.filename);
+    let name = attachment.filename;
+    if (req.query.thumb === '1') name = 'thumb_' + name;
+
+    const filePath = path.join(__dirname, '..', 'uploads', name);
     
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({ error: 'Файл не найден на диске' });
@@ -66,10 +84,7 @@ router.get('/task/:taskId', async (req, res) => {
 });
 
 router.post('/upload', upload.single('file'), async (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: 'Файл не загружен' });
-  }
-
+  if (!req.file) return res.status(400).json({ error: 'Файл не загружен' });
   const { task_id } = req.body;
   if (!task_id) {
     fs.unlinkSync(req.file.path);
@@ -78,6 +93,9 @@ router.post('/upload', upload.single('file'), async (req, res) => {
 
   const id = 'a' + Date.now();
   try {
+    const isImage = req.file.mimetype.startsWith('image/');
+    if (isImage) await generateThumb(req.file.path);
+
     await pool.execute(
       'INSERT INTO attachments (id, task_id, filename, original_name, mime_type, size) VALUES (?, ?, ?, ?, ?, ?)',
       [id, task_id, req.file.filename, req.file.originalname, req.file.mimetype, req.file.size]
@@ -94,10 +112,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
 
 router.post('/upload-base64', async (req, res) => {
   const { task_id, data, filename } = req.body;
-  
-  if (!task_id || !data) {
-    return res.status(400).json({ error: 'Недостаточно данных' });
-  }
+  if (!task_id || !data) return res.status(400).json({ error: 'Недостаточно данных' });
 
   const id = 'a' + Date.now();
   const ext = filename ? filename.split('.').pop() : 'png';
@@ -106,15 +121,15 @@ router.post('/upload-base64', async (req, res) => {
   const buffer = Buffer.from(base64Data, 'base64');
   
   const uploadDir = path.join(__dirname, '..', 'uploads');
-  if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-  }
+  if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
   
   const fileName = id + '.' + ext;
   const filePath = path.join(uploadDir, fileName);
   
   try {
     fs.writeFileSync(filePath, buffer);
+
+    if (mimeType.startsWith('image/')) await generateThumb(filePath);
     
     await pool.execute(
       'INSERT INTO attachments (id, task_id, filename, original_name, mime_type, size) VALUES (?, ?, ?, ?, ?, ?)',
@@ -132,16 +147,14 @@ router.post('/upload-base64', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const [rows] = await pool.execute('SELECT * FROM attachments WHERE id = ?', [req.params.id]);
-    if (rows.length === 0) {
-      return res.status(404).json({ error: 'Вложение не найдено' });
-    }
+    if (rows.length === 0) return res.status(404).json({ error: 'Вложение не найдено' });
     
     const attachment = rows[0];
     const filePath = path.join(__dirname, '..', 'uploads', attachment.filename);
+    const tp = thumbPath(attachment.filename);
     
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
+    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    if (fs.existsSync(tp)) fs.unlinkSync(tp);
     
     await pool.execute('DELETE FROM attachments WHERE id = ?', [req.params.id]);
     res.json({ success: true });

@@ -410,7 +410,7 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
                       <div key={att.id} className="attachment-item">
                         {isImage(att.mime_type) ? (
                           <ImageWithAuth
-                            src={`/api/attachments/download/${att.id}`}
+                            src={`/api/attachments/download/${att.id}?thumb=1`}
                             alt={att.original_name}
                             className="attachment-image"
                             onClick={() => setPreviewAttachment(att)}
