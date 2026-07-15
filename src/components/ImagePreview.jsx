@@ -9,6 +9,7 @@ export function ImagePreview({ src, alt, onClose }) {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const draggedRef = useRef(false);
   const imgRef = useRef(null);
+  const contentRef = useRef(null);
 
   useEffect(() => {
     async function loadImage() {
@@ -42,8 +43,15 @@ export function ImagePreview({ src, alt, onClose }) {
   function handleWheel(e) {
     e.preventDefault();
     const delta = e.deltaY > 0 ? -0.2 : 0.2;
-    setZoom(prev => Math.max(0.2, Math.min(5, prev + delta)));
-    setPan({ x: 0, y: 0 });
+    const newZoom = Math.max(0.2, Math.min(5, zoom + delta));
+    const rect = contentRef.current?.getBoundingClientRect();
+    if (rect) {
+      const cx = e.clientX - rect.left - rect.width / 2;
+      const cy = e.clientY - rect.top - rect.height / 2;
+      const ratio = newZoom / zoom;
+      setPan({ x: cx - (cx - pan.x) * ratio, y: cy - (cy - pan.y) * ratio });
+    }
+    setZoom(newZoom);
   }
 
   function handleMouseDown(e) {
@@ -83,6 +91,7 @@ export function ImagePreview({ src, alt, onClose }) {
   return (
     <div className="image-preview-overlay" onMouseDown={onClose}>
       <div
+        ref={contentRef}
         className="image-preview-content"
         onMouseDown={e => { e.stopPropagation(); handleMouseDown(e); }}
         onMouseMove={handleMouseMove}
