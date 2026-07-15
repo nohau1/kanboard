@@ -76,6 +76,7 @@ export function FinanceBoard({ onEditTask, customers }) {
     setSaving(true);
     try {
       const created = await api.invoices.create({ customer_id: editingInvoice.customer_id });
+      if (created.created_at) created.created_at = created.created_at.replace(' ', 'T');
       setEditingInvoice({ ...created, stages: ['testing', 'done'] });
       setInvoiceTasks([]);
       setSaved(false);
