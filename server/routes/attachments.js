@@ -43,10 +43,7 @@ router.get('/download/:id', async (req, res) => {
       return res.status(404).json({ error: 'Файл не найден на диске' });
     }
     
-    res.setHeader('Content-Type', attachment.mime_type || 'application/octet-stream');
-    res.setHeader('Cache-Control', 'private, max-age=3600');
-    res.setHeader('Content-Disposition', 'inline');
-    fs.createReadStream(filePath).pipe(res);
+    res.download(filePath, attachment.original_name);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Ошибка при скачивании' });
