@@ -5,6 +5,7 @@ const STAGE_TITLES = {
   'in-progress': 'В работе',
   'testing': 'Тестирование',
   'done': 'Готово',
+  'paid': 'Оплачено',
 };
 
 export function CustomerColumn({ customer, tasks, total, onAddTask, onEditTask, onDeleteTask }) {

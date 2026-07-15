@@ -173,7 +173,7 @@ router.put('/:id', async (req, res) => {
         [status, id]
       );
       await pool.execute(`
-        UPDATE tasks SET paid = 1 WHERE id IN (
+        UPDATE tasks SET paid = 1, stage = 'paid' WHERE id IN (
           SELECT task_id FROM invoice_tasks WHERE invoice_id = ?
         )
       `, [id]);
@@ -183,7 +183,7 @@ router.put('/:id', async (req, res) => {
         [status, id]
       );
       await pool.execute(`
-        UPDATE tasks SET paid = 0 WHERE id IN (
+        UPDATE tasks SET paid = 0, stage = 'done' WHERE id IN (
           SELECT task_id FROM invoice_tasks WHERE invoice_id = ?
         )
       `, [id]);

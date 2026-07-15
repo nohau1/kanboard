@@ -6,6 +6,7 @@ const STAGE_OPTIONS = [
   { id: 'done', title: 'Готово' },
   { id: 'in-progress', title: 'В работе' },
   { id: 'todo', title: 'К выполнению' },
+  { id: 'paid', title: 'Оплачено' },
 ];
 
 export function FinanceBoard({ onEditTask, customers }) {

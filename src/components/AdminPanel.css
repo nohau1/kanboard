@@ -160,6 +160,16 @@
   color: #389e0d;
 }
 
+.stage-badge.testing {
+  background: #fff7e6;
+  color: #d46b08;
+}
+
+.stage-badge.paid {
+  background: #f9f0ff;
+  color: #531dab;
+}
+
 .customer-tag {
   display: inline-block;
   padding: 2px 6px;

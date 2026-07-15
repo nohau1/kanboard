@@ -7,6 +7,7 @@ const STAGE_LABELS = {
   'in-progress': 'В работе',
   'testing': 'Тестирование',
   'done': 'Готово',
+  'paid': 'Оплачено',
 };
 
 export function TaskModal({ task, customers, stages, initialStage, initialCustomer, onSave, onClose, onDelete }) {

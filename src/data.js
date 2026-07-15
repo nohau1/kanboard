@@ -20,4 +20,5 @@ export const stages = [
   { id: 'in-progress', title: 'В работе' },
   { id: 'testing', title: 'Тестирование' },
   { id: 'done', title: 'Готово' },
+  { id: 'paid', title: 'Оплачено' },
 ];

@@ -5,6 +5,7 @@ const STAGE_TITLES = {
   'in-progress': 'В работе',
   'testing': 'Тестирование',
   'done': 'Готово',
+  'paid': 'Оплачено',
 };
 
 function formatDate(date) {
@@ -160,6 +161,7 @@ export function Calendar({ tasks, customers, onEditTask }) {
       case 'in-progress': return '#1890ff';
       case 'testing': return '#faad14';
       case 'done': return '#52c41a';
+      case 'paid': return '#722ed1';
       default: return '#999';
     }
   }
