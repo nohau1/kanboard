@@ -36,7 +36,7 @@ export function CustomerKanbanBoard({ tasks, customers, onAddTask, onEditTask, o
                 }
               }}
             />
-            {stage === 'todo' ? 'К выполнению' : stage === 'in-progress' ? 'В работе' : stage === 'testing' ? 'Тестирование' : 'Готово'}
+            {stage === 'todo' ? 'К выполнению' : stage === 'in-progress' ? 'В работе' : stage === 'testing' ? 'Тестирование' : stage === 'done' ? 'Готово' : 'Оплачено'}
           </label>
         ))}
       </div>
