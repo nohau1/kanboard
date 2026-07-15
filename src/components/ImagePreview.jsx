@@ -7,6 +7,7 @@ export function ImagePreview({ src, alt, onClose }) {
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const draggedRef = useRef(false);
   const imgRef = useRef(null);
 
   useEffect(() => {
@@ -48,12 +49,16 @@ export function ImagePreview({ src, alt, onClose }) {
   function handleMouseDown(e) {
     if (zoom > 1) {
       setDragging(true);
+      draggedRef.current = false;
       setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
     }
   }
 
   function handleMouseMove(e) {
     if (dragging && zoom > 1) {
+      const dx = e.clientX - dragStart.x - pan.x;
+      const dy = e.clientY - dragStart.y - pan.y;
+      if (Math.abs(dx) > 2 || Math.abs(dy) > 2) draggedRef.current = true;
       setPan({
         x: e.clientX - dragStart.x,
         y: e.clientY - dragStart.y,
@@ -71,6 +76,7 @@ export function ImagePreview({ src, alt, onClose }) {
 
   function handleImageClick(e) {
     e.stopPropagation();
+    if (draggedRef.current) return;
     if (zoom > 1) { zoomReset(); } else { setZoom(2); }
   }
 
