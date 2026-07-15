@@ -690,6 +690,7 @@ body {
   position: relative;
   max-width: 90vw;
   max-height: 90vh;
+  overflow: hidden;
 }
 
 .image-preview-content img {
@@ -713,6 +714,40 @@ body {
 
 .image-preview-close:hover {
   color: #1890ff;
+}
+
+.image-preview-zoom-controls {
+  position: absolute;
+  bottom: -44px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 8px;
+  padding: 4px 12px;
+}
+
+.image-preview-zoom-controls button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.image-preview-zoom-controls button:hover {
+  color: #1890ff;
+}
+
+.image-preview-zoom-controls span {
+  color: white;
+  font-size: 13px;
+  min-width: 48px;
+  text-align: center;
 }
 
 .image-preview-loading,
