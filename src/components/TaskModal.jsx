@@ -421,7 +421,11 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
                             onClick={() => setPreviewAttachment(att)}
                           />
                         ) : isAudio(att.mime_type) ? (
-                          <AudioPlayer src={`/api/attachments/download/${att.id}`} />
+                          <AudioPlayer
+                            src={`/api/attachments/download/${att.id}`}
+                            downloadUrl={`/api/attachments/download/${att.id}`}
+                            name={att.original_name}
+                          />
                         ) : (
                           <span
                             className="attachment-file"
