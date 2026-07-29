@@ -64,7 +64,7 @@ export function AudioPlayer({ src, downloadUrl, name }) {
   }
 
   return (
-    <div className="attachment-audio-wrap">
+    <div className="attachment-audio-wrap" onMouseDown={e => e.stopPropagation()}>
       <div className="attachment-audio-controls">
         <button className="audio-play-btn" onClick={toggle}>{playing ? '⏸' : '▶'}</button>
         <div className="audio-seek" onClick={handleSeek}>
