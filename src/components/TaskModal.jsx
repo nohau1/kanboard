@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { ImageWithAuth } from './ImageWithAuth';
 import { ImagePreview } from './ImagePreview';
+import { AudioPlayer } from './AudioPlayer';
 
 const STAGE_LABELS = {
   'todo': 'К выполнению',
@@ -233,6 +234,10 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
     return mimeType?.startsWith('image/');
   }
 
+  function isAudio(mimeType) {
+    return mimeType?.startsWith('audio/') || /\.(mp3|wav|ogg|flac|m4a)$/i.test(mimeType || '');
+  }
+
   function handleShare() {
     const url = window.location.origin + window.location.pathname + '#task/' + task.id;
     navigator.clipboard.writeText(url).then(() => {
@@ -415,6 +420,8 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
                             className="attachment-image"
                             onClick={() => setPreviewAttachment(att)}
                           />
+                        ) : isAudio(att.mime_type) ? (
+                          <AudioPlayer src={`/api/attachments/download/${att.id}`} />
                         ) : (
                           <span
                             className="attachment-file"

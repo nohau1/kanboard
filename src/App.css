@@ -641,6 +641,24 @@ body {
   text-decoration: underline;
 }
 
+.attachment-audio {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  background: #f0f5ff;
+  border: 1px solid #d6e4ff;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #1890ff;
+  user-select: none;
+}
+
+.attachment-audio:hover {
+  background: #e6f7ff;
+}
+
 .attachment-delete {
   position: absolute;
   top: 2px;
