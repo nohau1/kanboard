@@ -412,28 +412,30 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
                 {attachments.length > 0 && (
                   <div className="attachments-list">
                     {attachments.map(att => (
-                      <div key={att.id} className="attachment-item">
-                        {isImage(att.mime_type) ? (
-                          <ImageWithAuth
-                            src={`/api/attachments/download/${att.id}?thumb=1`}
-                            alt={att.original_name}
-                            className="attachment-image"
-                            onClick={() => setPreviewAttachment(att)}
-                          />
-                        ) : isAudio(att.mime_type) ? (
-                          <AudioPlayer
-                            src={`/api/attachments/download/${att.id}`}
-                            downloadUrl={`/api/attachments/download/${att.id}`}
-                            name={att.original_name}
-                          />
-                        ) : (
-                          <span
-                            className="attachment-file"
-                            onClick={() => window.open(`/api/attachments/download/${att.id}`, '_blank')}
-                          >
-                            {att.original_name}
-                          </span>
-                        )}
+                      <div key={att.id} className="attachment-row">
+                        <div className="attachment-item">
+                          {isImage(att.mime_type) ? (
+                            <ImageWithAuth
+                              src={`/api/attachments/download/${att.id}?thumb=1`}
+                              alt={att.original_name}
+                              className="attachment-image"
+                              onClick={() => setPreviewAttachment(att)}
+                            />
+                          ) : isAudio(att.mime_type) ? (
+                            <AudioPlayer
+                              src={`/api/attachments/download/${att.id}`}
+                              downloadUrl={`/api/attachments/download/${att.id}`}
+                              name={att.original_name}
+                            />
+                          ) : (
+                            <span
+                              className="attachment-file"
+                              onClick={() => window.open(`/api/attachments/download/${att.id}`, '_blank')}
+                            >
+                              {att.original_name}
+                            </span>
+                          )}
+                        </div>
                         <button
                           type="button"
                           className="attachment-delete"
