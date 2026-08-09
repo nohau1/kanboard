@@ -685,12 +685,14 @@ body {
   width: 28px;
   height: 28px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   flex-shrink: 0;
+  padding: 0;
+  line-height: 1;
 }
 
 .audio-play-btn:hover {

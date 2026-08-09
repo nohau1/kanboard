@@ -68,7 +68,13 @@ export function AudioPlayer({ src, downloadUrl, name }) {
   return (
     <div className="attachment-audio-wrap" onMouseDown={e => e.stopPropagation()}>
       <div className="attachment-audio-controls">
-        <button className="audio-play-btn" onMouseDown={e => e.stopPropagation()} onClick={toggle}>{playing ? '⏸' : '▶'}</button>
+        <button className="audio-play-btn" onMouseDown={e => e.stopPropagation()} onClick={toggle}>
+                  {playing ? (
+                    <svg width="10" height="12" viewBox="0 0 10 12"><rect x="0" y="0" width="3" height="12" rx="1" fill="white"/><rect x="7" y="0" width="3" height="12" rx="1" fill="white"/></svg>
+                  ) : (
+                    <svg width="10" height="12" viewBox="0 0 10 12" style={{ marginLeft: 1 }}><polygon points="0,0 10,6 0,12" fill="white"/></svg>
+                  )}
+                </button>
         <div className="audio-seek" onClick={handleSeek}>
           <div className="audio-seek-fill" style={{ width: duration ? (currentTime / duration * 100) + '%' : '0%' }} />
         </div>
