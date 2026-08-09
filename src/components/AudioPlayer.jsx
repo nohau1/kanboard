@@ -15,7 +15,9 @@ export function AudioPlayer({ src, downloadUrl, name }) {
     };
   }, []);
 
-  async function toggle() {
+  async function toggle(e) {
+    e.stopPropagation();
+    e.preventDefault();
     if (!audioRef.current) {
       try {
         const res = await fetch(src, {
@@ -66,7 +68,7 @@ export function AudioPlayer({ src, downloadUrl, name }) {
   return (
     <div className="attachment-audio-wrap" onMouseDown={e => e.stopPropagation()}>
       <div className="attachment-audio-controls">
-        <button className="audio-play-btn" onClick={toggle}>{playing ? '⏸' : '▶'}</button>
+        <button className="audio-play-btn" onMouseDown={e => e.stopPropagation()} onClick={toggle}>{playing ? '⏸' : '▶'}</button>
         <div className="audio-seek" onClick={handleSeek}>
           <div className="audio-seek-fill" style={{ width: duration ? (currentTime / duration * 100) + '%' : '0%' }} />
         </div>
