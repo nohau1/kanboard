@@ -751,6 +751,7 @@ body {
   flex-shrink: 0;
   padding: 0;
   line-height: 1;
+  margin-left: 2px;
 }
 
 .audio-play-btn:hover {
