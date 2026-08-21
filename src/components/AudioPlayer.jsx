@@ -72,7 +72,7 @@ export function AudioPlayer({ src, downloadUrl, name }) {
                   {playing ? (
                     <svg width="10" height="12" viewBox="0 0 10 12"><rect x="0" y="0" width="3" height="12" rx="1" fill="white"/><rect x="7" y="0" width="3" height="12" rx="1" fill="white"/></svg>
                   ) : (
-                    <svg width="10" height="12" viewBox="0 0 10 12" style={{ marginLeft: 1 }}><polygon points="0,0 10,6 0,12" fill="white"/></svg>
+                    <svg width="10" height="12" viewBox="0 0 10 12" style={{ marginLeft: 2 }}><polygon points="0,0 10,6 0,12" fill="white"/></svg>
                   )}
                 </button>
         <div className="audio-seek" onClick={handleSeek}>
