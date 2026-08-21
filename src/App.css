@@ -604,27 +604,26 @@ body {
 
 .attachments-list {
   display: flex;
-  flex-direction: column;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   gap: 8px;
   margin-top: 12px;
-  width: 100%;
 }
 
 .attachment-row {
   display: flex;
   align-items: flex-start;
   gap: 4px;
-  width: 100%;
+}
+
+.attachment-row.audio-row {
+  flex-basis: 100%;
 }
 
 .attachment-item {
-  flex: 1;
   border: 1px solid #e8e8e8;
   border-radius: 6px;
   overflow: hidden;
   background: white;
-  min-width: 0;
 }
 
 .attachment-image {
@@ -677,6 +676,10 @@ body {
   padding: 8px;
   background: #fafafa;
   box-sizing: border-box;
+}
+
+.audio-row .attachment-item {
+  flex: 1;
 }
 
 .attachment-audio-controls {

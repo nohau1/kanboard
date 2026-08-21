@@ -412,7 +412,7 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
                 {attachments.length > 0 && (
                   <div className="attachments-list">
                     {attachments.map(att => (
-                      <div key={att.id} className="attachment-row">
+                      <div key={att.id} className={`attachment-row ${isAudio(att.mime_type) ? 'audio-row' : ''}`}>
                         <div className="attachment-item">
                           {isImage(att.mime_type) ? (
                             <ImageWithAuth
