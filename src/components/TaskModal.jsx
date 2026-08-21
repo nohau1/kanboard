@@ -397,7 +397,7 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
                   ref={fileInputRef}
                   onChange={handleFileChange}
                   multiple
-                  accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+                  accept="*/*"
                   style={{ display: 'none' }}
                 />
                 <button
