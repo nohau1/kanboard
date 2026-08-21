@@ -21,6 +21,7 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
   const [description, setDescription] = useState('');
   const [attachments, setAttachments] = useState([]);
   const [uploading, setUploading] = useState(false);
+  const [uploads, setUploads] = useState([]);
   const [loadingAttachments, setLoadingAttachments] = useState(false);
   const [pasteWarning, setPasteWarning] = useState(false);
   const [blobUrls, setBlobUrls] = useState({});
@@ -134,44 +135,70 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
             setTimeout(() => setPasteWarning(false), 3000);
             return;
           }
-          uploadFile(file, `screenshot-${Date.now()}.png`);
+          uploadFile(file, `screenshot-${Date.now()}.png`).finally(() => setUploading(false));
         }
         return;
       }
     }
   }
 
-  async function uploadFile(file, originalName) {
+  function uploadFile(file, originalName) {
     if (!task) return;
-    
-    setUploading(true);
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('task_id', task.id);
 
-    try {
-      const res = await fetch('/api/attachments/upload', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        body: formData
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setAttachments(prev => [data, ...prev]);
-      }
-    } catch (err) {
-      console.error('Upload failed:', err);
-    }
-    setUploading(false);
+    const uploadId = 'u' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+    setUploads(prev => [...prev, { id: uploadId, name: originalName || file.name, progress: 0 }]);
+    setUploading(true);
+
+    return new Promise((resolve) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('task_id', task.id);
+
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/api/attachments/upload');
+      xhr.setRequestHeader('Authorization', 'Bearer ' + localStorage.getItem('token'));
+
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const pct = Math.round((e.loaded / e.total) * 100);
+          setUploads(prev => prev.map(u => u.id === uploadId ? { ...u, progress: pct } : u));
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const data = JSON.parse(xhr.responseText);
+            setAttachments(prev => [data, ...prev]);
+          } catch (err) {
+            console.error('Parse failed:', err);
+          }
+        } else {
+          console.error('Upload failed:', xhr.statusText);
+        }
+        setUploads(prev => prev.filter(u => u.id !== uploadId));
+        resolve();
+      };
+
+      xhr.onerror = () => {
+        console.error('Upload error');
+        setUploads(prev => prev.filter(u => u.id !== uploadId));
+        resolve();
+      };
+
+      xhr.send(formData);
+    });
   }
 
   function handleFileChange(e) {
     const files = e.target.files;
     if (!files || !task) return;
 
+    const promises = [];
     for (const file of files) {
-      uploadFile(file, file.name);
+      promises.push(uploadFile(file, file.name));
     }
+    Promise.all(promises).finally(() => setUploading(false));
     e.target.value = '';
   }
 
@@ -409,6 +436,19 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
                   {uploading ? 'Загрузка...' : 'Прикрепить файл'}
                 </button>
                 {loadingAttachments && <span className="attachments-loading">Загрузка...</span>}
+                {uploads.length > 0 && (
+                  <div className="upload-progress-list">
+                    {uploads.map(u => (
+                      <div key={u.id} className="upload-progress-item">
+                        <div className="upload-progress-name">{u.name}</div>
+                        <div className="upload-progress-bar">
+                          <div className="upload-progress-fill" style={{ width: u.progress + '%' }} />
+                        </div>
+                        <div className="upload-progress-text">{u.progress}%</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 {attachments.length > 0 && (
                   <div className="attachments-list">
                     {attachments.map(att => (

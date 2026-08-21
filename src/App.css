@@ -602,6 +602,54 @@ body {
   font-size: 13px;
 }
 
+.upload-progress-list {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.upload-progress-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: #fafafa;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.upload-progress-name {
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 100px;
+  max-width: 200px;
+}
+
+.upload-progress-bar {
+  flex: 1;
+  height: 6px;
+  background: #e8e8e8;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.upload-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #1890ff, #40a9ff);
+  transition: width 0.2s;
+}
+
+.upload-progress-text {
+  color: #666;
+  min-width: 38px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
 .attachments-list {
   display: flex;
   flex-wrap: wrap;
