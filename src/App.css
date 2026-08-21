@@ -665,11 +665,13 @@ body {
 }
 
 .attachment-audio-wrap {
+  width: 100%;
   min-width: 200px;
   border: 1px solid #e8e8e8;
   border-radius: 6px;
   padding: 8px;
   background: #fafafa;
+  box-sizing: border-box;
 }
 
 .attachment-audio-controls {
