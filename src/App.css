@@ -604,22 +604,27 @@ body {
 
 .attachments-list {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  flex-wrap: nowrap;
   gap: 8px;
   margin-top: 12px;
+  width: 100%;
 }
 
 .attachment-row {
   display: flex;
   align-items: flex-start;
   gap: 4px;
+  width: 100%;
 }
 
 .attachment-item {
+  flex: 1;
   border: 1px solid #e8e8e8;
   border-radius: 6px;
   overflow: hidden;
   background: white;
+  min-width: 0;
 }
 
 .attachment-image {
