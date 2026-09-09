@@ -1,11 +1,12 @@
+import 'dotenv/config';
 import mysql from 'mysql2/promise';
 import bcrypt from 'bcryptjs';
 
 const pool = mysql.createPool({
-  host: 'localhost',
-  user: 'kanban',
-  password: 'change-me',
-  database: 'kanban',
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'kanban',
+  password: process.env.DB_PASSWORD || 'change-me',
+  database: process.env.DB_NAME || 'kanban',
   waitForConnections: true,
   connectionLimit: 10,
   dateStrings: true,
