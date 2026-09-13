@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs';
 const pool = mysql.createPool({
   host: process.env.DB_HOST || 'localhost',
   user: process.env.DB_USER || 'kanban',
-  password: process.env.DB_PASSWORD || 'change-me',
+  password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'kanban',
   waitForConnections: true,
   connectionLimit: 10,
@@ -153,11 +153,12 @@ async function initDb() {
 
     const [admins] = await connection.execute('SELECT id FROM users WHERE role = ?', ['admin']);
     if (admins.length === 0) {
-      const password = bcrypt.hashSync('admin123', 10);
+      const password = bcrypt.hashSync(process.env.ADMIN_PASSWORD || 'admin123', 10);
       await connection.execute(
         'INSERT INTO users (id, username, password, role) VALUES (?, ?, ?, ?)',
         ['u1', 'admin', password, 'admin']
       );
+      console.log('Создан администратор по умолчанию (admin). Смените пароль после входа!');
     }
 
     const [customers] = await connection.execute('SELECT id FROM customers');
