@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 
+const API_URL = import.meta.env.VITE_API_URL || '';
+
 async function fetchApi(url, options = {}) {
   const token = localStorage.getItem('token');
-  const res = await fetch(`https://your-domain.com${url}`, {
+  const res = await fetch(`${API_URL}${url}`, {
     ...options,
     headers: {
       ...(options.body ? { 'Content-Type': 'application/json' } : {}),
