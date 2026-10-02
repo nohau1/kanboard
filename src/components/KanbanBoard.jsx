@@ -1,10 +1,7 @@
-import { useState } from 'react';
 import { Column } from './Column';
 import { stages } from '../data';
 
-export function KanbanBoard({ tasks, customers, onAddTask, onEditTask, onDeleteTask }) {
-  const [customerFilter, setCustomerFilter] = useState('');
-
+export function KanbanBoard({ tasks, customers, customerFilter, onCustomerFilterChange, onAddTask, onEditTask, onDeleteTask }) {
   const filteredTasks = customerFilter
     ? tasks.filter(t => t.customer_id === customerFilter)
     : tasks;
@@ -13,14 +10,14 @@ export function KanbanBoard({ tasks, customers, onAddTask, onEditTask, onDeleteT
     <div className="stage-board">
       <div className="stage-filter">
         <span>Заказчик:</span>
-        <select value={customerFilter} onChange={e => setCustomerFilter(e.target.value)}>
+        <select value={customerFilter} onChange={e => onCustomerFilterChange(e.target.value)}>
           <option value="">Все заказчики</option>
           {customers.map(c => (
             <option key={c.id} value={c.id}>{c.name}</option>
           ))}
         </select>
         {customerFilter && (
-          <button type="button" className="link" onClick={() => setCustomerFilter('')}>
+          <button type="button" className="link" onClick={() => onCustomerFilterChange('')}>
             Сбросить
           </button>
         )}

@@ -46,6 +46,7 @@ export default function App() {
     return 'stages';
   });
   const [modal, setModal] = useState(null);
+  const [stageCustomerFilter, setStageCustomerFilter] = useState('');
   const [showAdmin, setShowAdmin] = useState(false);
   const [showDbtool, setShowDbtool] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -372,6 +373,8 @@ export default function App() {
               <KanbanBoard
                 tasks={tasks}
                 customers={customers}
+                customerFilter={stageCustomerFilter}
+                onCustomerFilterChange={setStageCustomerFilter}
                 onAddTask={handleAddTask}
                 onEditTask={handleEditTask}
                 onDeleteTask={handleDeleteTask}
@@ -400,7 +403,13 @@ export default function App() {
           customers={customers}
           stages={stages}
           initialStage={modal.mode === 'stage' ? modal.containerId : null}
-          initialCustomer={modal.mode === 'customer' ? modal.containerId : null}
+          initialCustomer={
+            modal.mode === 'customer'
+              ? modal.containerId
+              : modal.mode === 'stage'
+                ? (stageCustomerFilter || null)
+                : null
+          }
           onSave={handleSaveTask}
           onClose={handleCloseModal}
           onDelete={handleDeleteTask}
