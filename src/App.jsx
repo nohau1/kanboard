@@ -46,7 +46,13 @@ export default function App() {
     return 'stages';
   });
   const [modal, setModal] = useState(null);
-  const [stageCustomerFilter, setStageCustomerFilter] = useState('');
+  const [stageCustomerFilter, setStageCustomerFilter] = useState(() => localStorage.getItem('stageCustomerFilter') || '');
+
+  function updateStageCustomerFilter(value) {
+    setStageCustomerFilter(value);
+    if (value) localStorage.setItem('stageCustomerFilter', value);
+    else localStorage.removeItem('stageCustomerFilter');
+  }
   const [showAdmin, setShowAdmin] = useState(false);
   const [showDbtool, setShowDbtool] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -67,6 +73,13 @@ export default function App() {
       }
     }
   }, [loading, tasks]);
+
+  useEffect(() => {
+    if (stageCustomerFilter && customers.length > 0 &&
+        !customers.some(c => c.id === stageCustomerFilter)) {
+      updateStageCustomerFilter('');
+    }
+  }, [customers, stageCustomerFilter]);
 
   useEffect(() => {
     if (user) {
@@ -374,7 +387,7 @@ export default function App() {
                 tasks={tasks}
                 customers={customers}
                 customerFilter={stageCustomerFilter}
-                onCustomerFilterChange={setStageCustomerFilter}
+                onCustomerFilterChange={updateStageCustomerFilter}
                 onAddTask={handleAddTask}
                 onEditTask={handleEditTask}
                 onDeleteTask={handleDeleteTask}
