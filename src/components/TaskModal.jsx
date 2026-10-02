@@ -498,8 +498,8 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
               </button>
             )}
             <div className="modal-actions-right">
-              <button type="button" className="btn-cancel" onClick={onClose}>Отмена</button>
               <button type="submit" className="btn-save">Сохранить</button>
+              <button type="button" className="btn-cancel" onClick={onClose}>Отмена</button>
             </div>
           </div>
         </form>
