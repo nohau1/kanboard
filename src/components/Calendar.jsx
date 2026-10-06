@@ -1,6 +1,13 @@
 import { useState, useMemo } from 'react';
 
-const HOURS = Array.from({ length: 24 }, (_, i) => i);
+const START_HOUR = 8;
+const END_HOUR = 23;
+
+const SLOTS = [];
+for (let h = START_HOUR; h <= END_HOUR; h++) {
+  SLOTS.push({ hour: h, minute: 0 });
+  SLOTS.push({ hour: h, minute: 30 });
+}
 const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 
 function pad(n) {
@@ -192,27 +199,27 @@ export function Calendar({ tasks, customers, onEditTask, onAddTaskAt, onMoveTask
     return { cost, hours };
   }
 
-  function slotKey(date, hour) {
-    return date.toDateString() + '-' + hour;
+  function slotKey(date, hour, minute) {
+    return date.toDateString() + '-' + hour + '-' + minute;
   }
 
-  function toDateStr(date, hour) {
-    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(hour)}:00:00`;
+  function toDateStr(date, hour, minute) {
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(hour)}:${pad(minute)}:00`;
   }
 
-  function slotTasks(date, hour) {
+  function slotTasks(date, hour, minute) {
     const list = tasksByDate[date.toDateString()] || [];
     return list.filter(t => {
       const d = parseLocalDate(t.due_date);
-      return d && d.getHours() === hour;
+      return d && d.getHours() === hour && d.getMinutes() === minute;
     });
   }
 
-  function handleDrop(e, date, hour) {
+  function handleDrop(e, date, hour, minute) {
     e.preventDefault();
     setDragOver(null);
     const taskId = e.dataTransfer.getData('text/plain');
-    if (taskId && onMoveTask) onMoveTask(taskId, toDateStr(date, hour));
+    if (taskId && onMoveTask) onMoveTask(taskId, toDateStr(date, hour, minute));
   }
 
   function handleDragStart(e, task) {
@@ -345,18 +352,18 @@ export function Calendar({ tasks, customers, onEditTask, onAddTaskAt, onMoveTask
           </div>
 
           <div className="cal-time-body">
-            {HOURS.map(hour => (
-              <div className="cal-hour-row" key={hour}>
-                <div className="cal-hour-label">{pad(hour)}:00</div>
+            {SLOTS.map(slot => (
+              <div className={`cal-hour-row ${slot.minute === 30 ? 'half' : ''}`} key={`${slot.hour}-${slot.minute}`}>
+                <div className="cal-hour-label">{slot.minute === 0 ? `${pad(slot.hour)}:00` : ''}</div>
                 {timeDays.map(d => {
-                  const cellTasks = slotTasks(d, hour);
+                  const cellTasks = slotTasks(d, slot.hour, slot.minute);
                   return (
                     <div
                       key={d.toDateString()}
-                      className={`cal-hour-cell ${dragOver === slotKey(d, hour) ? 'drag-over' : ''}`}
-                      onClick={() => onAddTaskAt?.(toDateStr(d, hour))}
-                      onDragOver={e => { e.preventDefault(); setDragOver(slotKey(d, hour)); }}
-                      onDrop={e => handleDrop(e, d, hour)}
+                      className={`cal-hour-cell ${slot.minute === 30 ? 'half' : ''} ${dragOver === slotKey(d, slot.hour, slot.minute) ? 'drag-over' : ''}`}
+                      onClick={() => onAddTaskAt?.(toDateStr(d, slot.hour, slot.minute))}
+                      onDragOver={e => { e.preventDefault(); setDragOver(slotKey(d, slot.hour, slot.minute)); }}
+                      onDrop={e => handleDrop(e, d, slot.hour, slot.minute)}
                     >
                       {cellTasks.map(renderChip)}
                     </div>
