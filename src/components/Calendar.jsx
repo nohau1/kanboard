@@ -1,17 +1,27 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 
-const START_HOUR = 8;
-const END_HOUR = 23;
+const DAY_START = 8;      // рабочий день начинается в 08:00
+const DAY_END = 23;       // последний слот 23:30
+const SLOT_MIN = 30;      // шаг 30 минут
+const SLOT_H = 26;        // высота слота в px
+const DAY_START_MIN = DAY_START * 60;
 
 const SLOTS = [];
-for (let h = START_HOUR; h <= END_HOUR; h++) {
+for (let h = DAY_START; h <= DAY_END; h++) {
   SLOTS.push({ hour: h, minute: 0 });
   SLOTS.push({ hour: h, minute: 30 });
 }
+const SLOT_COUNT = SLOTS.length;
+const GRID_HEIGHT = SLOT_COUNT * SLOT_H;
+
 const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 
 function pad(n) {
   return String(n).padStart(2, '0');
+}
+
+function clamp(v, min, max) {
+  return Math.max(min, Math.min(max, v));
 }
 
 function formatDate(date) {
@@ -90,10 +100,24 @@ function formatTotal(cost, hours) {
   return '';
 }
 
-export function Calendar({ tasks, customers, onEditTask, onAddTaskAt, onMoveTask }) {
+function minutesToY(minutes) {
+  return ((minutes - DAY_START_MIN) / SLOT_MIN) * SLOT_H;
+}
+
+function minutesToSlot(minutes) {
+  return clamp(Math.round((minutes - DAY_START_MIN) / SLOT_MIN), 0, SLOT_COUNT - 1);
+}
+
+function durationMinutes(task) {
+  const h = parseFloat(task.hours) || 0;
+  return Math.max(SLOT_MIN, Math.round(h * 60));
+}
+
+export function Calendar({ tasks, customers, onEditTask, onAddTaskAt, onMoveTask, onResizeTask }) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState('week');
-  const [dragOver, setDragOver] = useState(null);
+  const [drag, setDrag] = useState(null);
+  const columnsRef = useRef(null);
 
   const tasksByDate = useMemo(() => {
     const map = {};
@@ -106,16 +130,75 @@ export function Calendar({ tasks, customers, onEditTask, onAddTaskAt, onMoveTask
       map[key].push(task);
     });
     Object.keys(map).forEach(key => {
-      map[key].sort((a, b) => {
-        const dateA = parseLocalDate(a.due_date);
-        const dateB = parseLocalDate(b.due_date);
-        return dateA - dateB;
-      });
+      map[key].sort((a, b) => parseLocalDate(a.due_date) - parseLocalDate(b.due_date));
     });
     return map;
   }, [tasks]);
 
   const monthDates = useMemo(() => getMonthDates(currentDate), [currentDate]);
+  const timeDays = view === 'day' ? [currentDate] : (view === 'week' ? getWeekDates(currentDate) : []);
+  const colWidth = timeDays.length ? 100 / timeDays.length : 100;
+
+  useEffect(() => {
+    if (!drag) return;
+
+    function slotFromY(clientY) {
+      const rect = columnsRef.current.getBoundingClientRect();
+      return clamp(Math.floor((clientY - rect.top) / SLOT_H), 0, SLOT_COUNT - 1);
+    }
+    function dayFromX(clientX) {
+      const rect = columnsRef.current.getBoundingClientRect();
+      return clamp(Math.floor((clientX - rect.left) / (rect.width / timeDays.length)), 0, timeDays.length - 1);
+    }
+
+    function handleMove(e) {
+      if (drag.type === 'create') {
+        const s = slotFromY(e.clientY);
+        setDrag(d => ({ ...d, endSlot: s }));
+      } else if (drag.type === 'resize') {
+        const s = slotFromY(e.clientY);
+        setDrag(d => ({ ...d, endSlot: Math.max(d.startSlot, s) }));
+      } else if (drag.type === 'move') {
+        const rect = columnsRef.current.getBoundingClientRect();
+        const pointerSlot = clamp(Math.floor((e.clientY - rect.top) / SLOT_H), 0, SLOT_COUNT - 1);
+        const newStartSlot = clamp(pointerSlot - drag.grabRow, 0, SLOT_COUNT - 1);
+        const dayIdx = dayFromX(e.clientX);
+        setDrag(d => ({ ...d, curDay: dayIdx, curStartSlot: newStartSlot, moved: true }));
+      }
+    }
+
+    function handleUp() {
+      const d = drag;
+      if (d.type === 'create') {
+        const s0 = Math.min(d.startSlot, d.endSlot);
+        const s1 = Math.max(d.startSlot, d.endSlot);
+        const date = timeDays[d.dayIndex];
+        const str = slotToDateStr(date, s0);
+        if (s0 === s1) {
+          onAddTaskAt?.(str);
+        } else {
+          onAddTaskAt?.(str, ((s1 - s0 + 1) * SLOT_MIN) / 60);
+        }
+      } else if (d.type === 'resize') {
+        const hours = ((d.endSlot - d.startSlot + 1) * SLOT_MIN) / 60;
+        onResizeTask?.(d.taskId, hours);
+      } else if (d.type === 'move') {
+        if (d.moved && (d.curDay !== d.origDay || d.curStartSlot !== d.origStartSlot)) {
+          onMoveTask?.(d.taskId, slotToDateStr(timeDays[d.curDay], d.curStartSlot));
+        } else {
+          onEditTask?.(d.task);
+        }
+      }
+      setDrag(null);
+    }
+
+    document.addEventListener('mousemove', handleMove);
+    document.addEventListener('mouseup', handleUp);
+    return () => {
+      document.removeEventListener('mousemove', handleMove);
+      document.removeEventListener('mouseup', handleUp);
+    };
+  }, [drag, timeDays, onAddTaskAt, onMoveTask, onResizeTask, onEditTask]);
 
   function navigate(direction) {
     const newDate = new Date(currentDate);
@@ -199,50 +282,87 @@ export function Calendar({ tasks, customers, onEditTask, onAddTaskAt, onMoveTask
     return { cost, hours };
   }
 
-  function slotKey(date, hour, minute) {
-    return date.toDateString() + '-' + hour + '-' + minute;
+  function slotToDateStr(date, slot) {
+    const min = DAY_START_MIN + slot * SLOT_MIN;
+    const h = Math.floor(min / 60);
+    const m = min % 60;
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(h)}:${pad(m)}:00`;
   }
 
-  function toDateStr(date, hour, minute) {
-    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(hour)}:${pad(minute)}:00`;
+  function handleColumnMouseDown(e, dayIndex) {
+    if (e.button !== 0) return;
+    const rect = columnsRef.current.getBoundingClientRect();
+    const slot = clamp(Math.floor((e.clientY - rect.top) / SLOT_H), 0, SLOT_COUNT - 1);
+    e.preventDefault();
+    setDrag({ type: 'create', dayIndex, startSlot: slot, endSlot: slot });
   }
 
-  function slotTasks(date, hour, minute) {
-    const list = tasksByDate[date.toDateString()] || [];
-    return list.filter(t => {
-      const d = parseLocalDate(t.due_date);
-      return d && d.getHours() === hour && d.getMinutes() === minute;
+  function handleBlockMouseDown(e, task, dayIndex, startMin) {
+    if (e.button !== 0) return;
+    e.stopPropagation();
+    e.preventDefault();
+    const rect = columnsRef.current.getBoundingClientRect();
+    const grabY = e.clientY - rect.top - minutesToY(startMin);
+    setDrag({
+      type: 'move',
+      task,
+      taskId: task.id,
+      origDay: dayIndex,
+      origStartSlot: minutesToSlot(startMin),
+      origStartMin: startMin,
+      curDay: dayIndex,
+      curStartSlot: minutesToSlot(startMin),
+      grabY,
+      grabRow: Math.floor(Math.max(0, grabY) / SLOT_H),
+      moved: false,
     });
   }
 
-  function handleDrop(e, date, hour, minute) {
+  function handleResizeMouseDown(e, task, startMin) {
+    if (e.button !== 0) return;
+    e.stopPropagation();
     e.preventDefault();
-    setDragOver(null);
-    const taskId = e.dataTransfer.getData('text/plain');
-    if (taskId && onMoveTask) onMoveTask(taskId, toDateStr(date, hour, minute));
+    const startSlot = minutesToSlot(startMin);
+    setDrag({
+      type: 'resize',
+      taskId: task.id,
+      startSlot,
+      endSlot: minutesToSlot(startMin + durationMinutes(task)),
+    });
   }
 
-  function handleDragStart(e, task) {
-    e.dataTransfer.setData('text/plain', task.id);
-    e.dataTransfer.effectAllowed = 'move';
-  }
+  function renderBlock(task, dayIndex) {
+    const start = parseLocalDate(task.due_date);
+    const startMin = start.getHours() * 60 + start.getMinutes();
+    let durMin = durationMinutes(task);
+    if (drag && drag.type === 'resize' && drag.taskId === task.id) {
+      durMin = Math.max(SLOT_MIN, (drag.endSlot - drag.startSlot + 1) * SLOT_MIN);
+    }
 
-  function renderChip(task) {
+    const top = Math.max(0, minutesToY(startMin));
+    const bottom = clamp(minutesToY(startMin + durMin), 0, GRID_HEIGHT);
+    const height = Math.max(SLOT_H, bottom - top) - 1;
     const cost = parseFloat(task.cost) || 0;
+    const isDragging = drag && drag.type === 'move' && drag.taskId === task.id && drag.moved;
+
     return (
       <div
         key={task.id}
-        className="cal-task-chip"
-        style={{ borderLeftColor: getStageColor(task.stage) }}
-        draggable
-        onDragStart={e => handleDragStart(e, task)}
-        onDragEnd={() => setDragOver(null)}
-        onClick={e => { e.stopPropagation(); onEditTask(task); }}
+        className={`cal-block ${isDragging ? 'cal-block-moving' : ''}`}
+        style={{ top, height, borderLeftColor: getStageColor(task.stage) }}
+        onMouseDown={e => handleBlockMouseDown(e, task, dayIndex, startMin)}
         title={task.title}
       >
-        <span className="chip-time">{formatTime(parseLocalDate(task.due_date))}</span>
-        <span className="chip-title">{task.title}</span>
-        {cost > 0 && <span className="chip-cost">{cost.toLocaleString('ru-RU')} ₽</span>}
+        <div className="cal-block-body">
+          <span className="block-time">{formatTime(start)}</span>
+          <span className="block-title">{task.title}</span>
+          {cost > 0 && <span className="block-cost">{cost.toLocaleString('ru-RU')} ₽</span>}
+        </div>
+        <div
+          className="cal-block-resize"
+          onMouseDown={e => handleResizeMouseDown(e, task, startMin)}
+          title="Растянуть"
+        />
       </div>
     );
   }
@@ -250,7 +370,6 @@ export function Calendar({ tasks, customers, onEditTask, onAddTaskAt, onMoveTask
   const monthTotal = getMonthTotals();
   const numWeeks = Math.ceil(monthDates.length / 7);
 
-  const timeDays = view === 'day' ? [currentDate] : getWeekDates(currentDate);
   const timeRangeTotal = timeDays.reduce((acc, d) => {
     const { cost, hours } = getDayTotals(d);
     return { cost: acc.cost + cost, hours: acc.hours + hours };
@@ -337,40 +456,70 @@ export function Calendar({ tasks, customers, onEditTask, onAddTaskAt, onMoveTask
           </div>
         </div>
       ) : (
-        <div className={`cal-time ${view}`}>
+        <div className={`cal-time ${view} ${drag ? 'is-dragging' : ''}`}>
           <div className="cal-time-body">
-          <div className="cal-time-header">
-            <div className="cal-gutter-header"></div>
-            {timeDays.map(d => (
-              <div
-                key={d.toDateString()}
-                className={`cal-day-head ${isToday(d) ? 'today' : ''}`}
-              >
-                <span className="cal-day-name">{WEEKDAYS[(d.getDay() + 6) % 7]}</span>
-                <span className="cal-day-num">{d.getDate()}</span>
-              </div>
-            ))}
-          </div>
+            <div className="cal-time-header">
+              <div className="cal-gutter-header"></div>
+              {timeDays.map(d => (
+                <div
+                  key={d.toDateString()}
+                  className={`cal-day-head ${isToday(d) ? 'today' : ''}`}
+                >
+                  <span className="cal-day-name">{WEEKDAYS[(d.getDay() + 6) % 7]}</span>
+                  <span className="cal-day-num">{d.getDate()}</span>
+                </div>
+              ))}
+            </div>
 
-            {SLOTS.map(slot => (
-              <div className={`cal-hour-row ${slot.minute === 30 ? 'half' : ''}`} key={`${slot.hour}-${slot.minute}`}>
-                <div className="cal-hour-label">{slot.minute === 0 ? `${pad(slot.hour)}:00` : ''}</div>
-                {timeDays.map(d => {
-                  const cellTasks = slotTasks(d, slot.hour, slot.minute);
-                  return (
-                    <div
-                      key={d.toDateString()}
-                      className={`cal-hour-cell ${slot.minute === 30 ? 'half' : ''} ${dragOver === slotKey(d, slot.hour, slot.minute) ? 'drag-over' : ''}`}
-                      onClick={() => onAddTaskAt?.(toDateStr(d, slot.hour, slot.minute))}
-                      onDragOver={e => { e.preventDefault(); setDragOver(slotKey(d, slot.hour, slot.minute)); }}
-                      onDrop={e => handleDrop(e, d, slot.hour, slot.minute)}
-                    >
-                      {cellTasks.map(renderChip)}
-                    </div>
-                  );
-                })}
+            <div className="cal-time-grid">
+              <div className="cal-gutter">
+                {SLOTS.map((s, i) => (
+                  <div className="cal-gutter-slot" key={i} style={{ height: SLOT_H }}>
+                    {s.minute === 0 ? `${pad(s.hour)}:00` : ''}
+                  </div>
+                ))}
               </div>
-            ))}
+
+              <div className="cal-columns" ref={columnsRef} style={{ height: GRID_HEIGHT }}>
+                {timeDays.map((d, dayIndex) => (
+                  <div
+                    key={d.toDateString()}
+                    className="cal-column"
+                    onMouseDown={e => handleColumnMouseDown(e, dayIndex)}
+                    style={{
+                      backgroundImage: `repeating-linear-gradient(to bottom, #f0f0f0 0, #f0f0f0 1px, transparent 1px, transparent ${SLOT_H}px)`,
+                      backgroundSize: `100% ${SLOT_H}px`,
+                    }}
+                  >
+                    {(tasksByDate[d.toDateString()] || []).map(task => renderBlock(task, dayIndex))}
+                  </div>
+                ))}
+
+                {drag && drag.type === 'create' && (
+                  <div
+                    className="cal-drag-preview create"
+                    style={{
+                      left: `${drag.dayIndex * colWidth}%`,
+                      width: `${colWidth}%`,
+                      top: Math.min(drag.startSlot, drag.endSlot) * SLOT_H,
+                      height: (Math.abs(drag.endSlot - drag.startSlot) + 1) * SLOT_H,
+                    }}
+                  />
+                )}
+
+                {drag && drag.type === 'move' && drag.moved && (
+                  <div
+                    className="cal-drag-preview move"
+                    style={{
+                      left: `${drag.curDay * colWidth}%`,
+                      width: `${colWidth}%`,
+                      top: drag.curStartSlot * SLOT_H,
+                      height: Math.max(SLOT_H, (durationMinutes(drag.task) / SLOT_MIN) * SLOT_H),
+                    }}
+                  />
+                )}
+              </div>
+            </div>
           </div>
 
           <div className="cal-time-total">

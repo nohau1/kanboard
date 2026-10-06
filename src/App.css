@@ -1425,13 +1425,18 @@ body {
   overflow: hidden;
 }
 
+.cal-time-body {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
 .cal-time-header {
   display: flex;
   background: #fafafa;
   border-bottom: 1px solid #e8e8e8;
   position: sticky;
   top: 0;
-  z-index: 2;
+  z-index: 3;
 }
 
 .cal-gutter-header {
@@ -1471,89 +1476,127 @@ body {
   color: #1890ff;
 }
 
-.cal-time-body {
-  max-height: 58vh;
-  overflow-y: auto;
-}
-
-.cal-hour-row {
+.cal-time-grid {
   display: flex;
-  min-height: 30px;
-  border-bottom: 1px solid #f5f5f5;
+  user-select: none;
 }
 
-.cal-hour-row.half {
-  border-bottom: 1px solid #ebebeb;
-}
-
-.cal-hour-label {
+.cal-gutter {
   width: 56px;
   flex-shrink: 0;
-  font-size: 11px;
-  color: #999;
-  text-align: right;
-  padding: 4px 8px 0 0;
   border-right: 1px solid #e8e8e8;
   box-sizing: border-box;
 }
 
-.cal-hour-cell {
-  flex: 1;
-  border-left: 1px solid #f5f5f5;
-  padding: 2px;
-  min-width: 0;
-  min-height: 30px;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+.cal-gutter-slot {
+  font-size: 11px;
+  color: #999;
+  text-align: right;
+  padding: 2px 8px 0 0;
   box-sizing: border-box;
 }
 
-.cal-hour-cell:hover {
-  background: #f5faff;
-}
-
-.cal-hour-cell.drag-over {
-  background: #e6f7ff;
-  outline: 1px solid #1890ff;
-  outline-offset: -1px;
-}
-
-.cal-task-chip {
+.cal-columns {
+  flex: 1;
   display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  line-height: 1.3;
-  padding: 2px 4px;
-  border-left: 3px solid #999;
-  background: #f5f5f5;
-  border-radius: 3px;
-  cursor: grab;
-  white-space: nowrap;
-  overflow: hidden;
+  position: relative;
+  min-width: 0;
 }
 
-.cal-task-chip:active {
+.cal-column {
+  flex: 1;
+  position: relative;
+  border-left: 1px solid #f5f5f5;
+  min-width: 0;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.cal-column:hover {
+  background-color: #fafcff;
+}
+
+.cal-block {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  background: #e6f0ff;
+  border-left: 3px solid #999;
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: grab;
+  box-sizing: border-box;
+  font-size: 11px;
+  z-index: 1;
+}
+
+.cal-block:active {
   cursor: grabbing;
 }
 
-.cal-task-chip .chip-time {
-  color: #666;
-  flex-shrink: 0;
+.cal-block-moving {
+  opacity: 0.4;
 }
 
-.cal-task-chip .chip-title {
+.cal-block-body {
+  display: flex;
+  flex-direction: column;
+  padding: 2px 5px;
+  gap: 1px;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.cal-block-body .block-time {
+  color: #666;
+  font-size: 10px;
+}
+
+.cal-block-body .block-title {
+  color: #333;
+  font-weight: 500;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: #333;
 }
 
-.cal-task-chip .chip-cost {
+.cal-block-body .block-cost {
   color: #1890ff;
-  flex-shrink: 0;
-  margin-left: auto;
+}
+
+.cal-block-resize {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 6px;
+  cursor: ns-resize;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.cal-block-resize:hover {
+  background: rgba(24, 144, 255, 0.4);
+}
+
+.cal-drag-preview {
+  position: absolute;
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.cal-drag-preview.create {
+  background: rgba(24, 144, 255, 0.18);
+  border: 1px dashed #1890ff;
+}
+
+.cal-drag-preview.move {
+  background: rgba(24, 144, 255, 0.12);
+  border: 1px solid #1890ff;
+}
+
+.cal-time.is-dragging .cal-column {
+  cursor: default;
 }
 
 .cal-time-total {
