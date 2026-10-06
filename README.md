@@ -115,7 +115,7 @@ kanboard/
 #### 1. Клонировать репозиторий
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/nohau1/kanboard.git
 cd kanboard
 ```
 
@@ -359,7 +359,7 @@ kanboard/
 #### 1. Clone the repository
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/nohau1/kanboard.git
 cd kanboard
 ```
 
