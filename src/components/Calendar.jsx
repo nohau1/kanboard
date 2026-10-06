@@ -113,15 +113,20 @@ function durationMinutes(task) {
   return Math.max(SLOT_MIN, Math.round(h * 60));
 }
 
-export function Calendar({ tasks, customers, onEditTask, onAddTaskAt, onMoveTask, onResizeTask }) {
+export function Calendar({ tasks, customers, customerFilter, onCustomerFilterChange, onEditTask, onAddTaskAt, onMoveTask, onResizeTask }) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState('week');
   const [drag, setDrag] = useState(null);
   const columnsRef = useRef(null);
 
+  const filteredTasks = useMemo(
+    () => (customerFilter ? tasks.filter(t => t.customer_id === customerFilter) : tasks),
+    [tasks, customerFilter]
+  );
+
   const tasksByDate = useMemo(() => {
     const map = {};
-    tasks.forEach(task => {
+    filteredTasks.forEach(task => {
       if (!task.due_date) return;
       const date = parseLocalDate(task.due_date);
       if (!date || isNaN(date.getTime())) return;
@@ -133,7 +138,7 @@ export function Calendar({ tasks, customers, onEditTask, onAddTaskAt, onMoveTask
       map[key].sort((a, b) => parseLocalDate(a.due_date) - parseLocalDate(b.due_date));
     });
     return map;
-  }, [tasks]);
+  }, [filteredTasks]);
 
   const monthDates = useMemo(() => getMonthDates(currentDate), [currentDate]);
   const timeDays = view === 'day' ? [currentDate] : (view === 'week' ? getWeekDates(currentDate) : []);
@@ -395,6 +400,21 @@ export function Calendar({ tasks, customers, onEditTask, onAddTaskAt, onMoveTask
             </button>
           ))}
         </div>
+      </div>
+
+      <div className="stage-filter">
+        <span>Заказчик:</span>
+        <select value={customerFilter || ''} onChange={e => onCustomerFilterChange?.(e.target.value)}>
+          <option value="">Все заказчики</option>
+          {customers.map(c => (
+            <option key={c.id} value={c.id}>{c.name}</option>
+          ))}
+        </select>
+        {customerFilter && (
+          <button type="button" className="link" onClick={() => onCustomerFilterChange?.('')}>
+            Сбросить
+          </button>
+        )}
       </div>
 
       {view === 'month' ? (

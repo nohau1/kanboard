@@ -53,6 +53,14 @@ export default function App() {
     if (value) localStorage.setItem('stageCustomerFilter', value);
     else localStorage.removeItem('stageCustomerFilter');
   }
+
+  const [calendarCustomerFilter, setCalendarCustomerFilter] = useState(() => localStorage.getItem('calendarCustomerFilter') || '');
+
+  function updateCalendarCustomerFilter(value) {
+    setCalendarCustomerFilter(value);
+    if (value) localStorage.setItem('calendarCustomerFilter', value);
+    else localStorage.removeItem('calendarCustomerFilter');
+  }
   const [showAdmin, setShowAdmin] = useState(false);
   const [showDbtool, setShowDbtool] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -80,6 +88,13 @@ export default function App() {
       updateStageCustomerFilter('');
     }
   }, [customers, stageCustomerFilter]);
+
+  useEffect(() => {
+    if (calendarCustomerFilter && customers.length > 0 &&
+        !customers.some(c => c.id === calendarCustomerFilter)) {
+      updateCalendarCustomerFilter('');
+    }
+  }, [customers, calendarCustomerFilter]);
 
   useEffect(() => {
     if (user) {
@@ -398,6 +413,8 @@ export default function App() {
           <Calendar
             tasks={tasks}
             customers={customers}
+            customerFilter={calendarCustomerFilter}
+            onCustomerFilterChange={updateCalendarCustomerFilter}
             onEditTask={handleEditTask}
             onAddTaskAt={handleAddTaskAt}
             onMoveTask={handleMoveTask}
@@ -450,9 +467,11 @@ export default function App() {
           initialCustomer={
             modal.mode === 'customer'
               ? modal.containerId
-              : (modal.mode === 'stage' && !modal.initialDueDate)
-                ? (stageCustomerFilter || null)
-                : null
+              : modal.mode === 'edit'
+                ? null
+                : modal.initialDueDate
+                  ? (calendarCustomerFilter || null)
+                  : (stageCustomerFilter || null)
           }
           initialDueDate={modal.initialDueDate || null}
           initialHours={modal.initialHours ?? null}
