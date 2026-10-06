@@ -31,3 +31,6 @@ dist-ssr
 
 # Uploaded files
 server/uploads/
+
+# Temp files
+/temp/

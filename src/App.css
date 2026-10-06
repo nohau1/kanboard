@@ -1438,6 +1438,7 @@ body {
   width: 56px;
   flex-shrink: 0;
   border-right: 1px solid #e8e8e8;
+  box-sizing: border-box;
 }
 
 .cal-day-head {
@@ -1448,6 +1449,7 @@ body {
   padding: 6px 4px;
   border-left: 1px solid #e8e8e8;
   min-width: 0;
+  box-sizing: border-box;
 }
 
 .cal-day-head.today {

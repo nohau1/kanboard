@@ -338,6 +338,7 @@ export function Calendar({ tasks, customers, onEditTask, onAddTaskAt, onMoveTask
         </div>
       ) : (
         <div className={`cal-time ${view}`}>
+          <div className="cal-time-body">
           <div className="cal-time-header">
             <div className="cal-gutter-header"></div>
             {timeDays.map(d => (
@@ -351,7 +352,6 @@ export function Calendar({ tasks, customers, onEditTask, onAddTaskAt, onMoveTask
             ))}
           </div>
 
-          <div className="cal-time-body">
             {SLOTS.map(slot => (
               <div className={`cal-hour-row ${slot.minute === 30 ? 'half' : ''}`} key={`${slot.hour}-${slot.minute}`}>
                 <div className="cal-hour-label">{slot.minute === 0 ? `${pad(slot.hour)}:00` : ''}</div>
