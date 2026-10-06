@@ -245,6 +245,24 @@ export default function App() {
     });
   }
 
+  function handleAddTaskAt(dateStr) {
+    setModal({
+      mode: 'stage',
+      containerId: 'todo',
+      task: null,
+      initialDueDate: dateStr,
+    });
+  }
+
+  async function handleMoveTask(taskId, dueDate) {
+    try {
+      const updated = await api.tasks.update(taskId, { due_date: dueDate });
+      setTasks(prev => prev.map(t => t.id === updated.id ? updated : t));
+    } catch (err) {
+      alert(err.message);
+    }
+  }
+
   function handleEditTask(task) {
     setModal({
       mode: 'edit',
@@ -371,6 +389,8 @@ export default function App() {
             tasks={tasks}
             customers={customers}
             onEditTask={handleEditTask}
+            onAddTaskAt={handleAddTaskAt}
+            onMoveTask={handleMoveTask}
           />
         ) : view === 'finances' ? (
           <FinanceBoard onEditTask={handleEditTask} customers={customers} />
@@ -419,10 +439,11 @@ export default function App() {
           initialCustomer={
             modal.mode === 'customer'
               ? modal.containerId
-              : modal.mode === 'stage'
+              : (modal.mode === 'stage' && !modal.initialDueDate)
                 ? (stageCustomerFilter || null)
                 : null
           }
+          initialDueDate={modal.initialDueDate || null}
           onSave={handleSaveTask}
           onClose={handleCloseModal}
           onDelete={handleDeleteTask}

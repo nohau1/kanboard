@@ -11,7 +11,7 @@ const STAGE_LABELS = {
   'paid': 'Оплачено',
 };
 
-export function TaskModal({ task, customers, stages, initialStage, initialCustomer, onSave, onClose, onDelete }) {
+export function TaskModal({ task, customers, stages, initialStage, initialCustomer, initialDueDate, onSave, onClose, onDelete }) {
   const [title, setTitle] = useState('');
   const [customerId, setCustomerId] = useState('');
   const [stage, setStage] = useState('todo');
@@ -48,7 +48,7 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
       setTitle('');
       setCustomerId(initialCustomer || customers[0]?.id || '');
       setStage(initialStage || stages[0]?.id || 'todo');
-      setDueDate('');
+      setDueDate(initialDueDate ? initialDueDate.substring(0, 16) : '');
       setCost('');
       setHours('');
       setDescription('');
@@ -56,7 +56,7 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
       setHistory([]);
       setShowHistory(false);
     }
-  }, [task, customers, stages, initialStage, initialCustomer]);
+  }, [task, customers, stages, initialStage, initialCustomer, initialDueDate]);
 
   useEffect(() => {
     if (task && pendingPaste.current) {

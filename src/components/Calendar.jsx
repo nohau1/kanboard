@@ -1,12 +1,11 @@
 import { useState, useMemo } from 'react';
 
-const STAGE_TITLES = {
-  'todo': 'К выполнению',
-  'in-progress': 'В работе',
-  'testing': 'Тестирование',
-  'done': 'Готово',
-  'paid': 'Оплачено',
-};
+const HOURS = Array.from({ length: 24 }, (_, i) => i);
+const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+
+function pad(n) {
+  return String(n).padStart(2, '0');
+}
 
 function formatDate(date) {
   return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
@@ -27,7 +26,7 @@ function getWeekDates(date) {
   const day = start.getDay();
   const diff = start.getDate() - day + (day === 0 ? -6 : 1);
   start.setDate(diff);
-  
+
   const dates = [];
   for (let i = 0; i < 7; i++) {
     const d = new Date(start);
@@ -42,16 +41,16 @@ function getMonthDates(date) {
   const month = date.getMonth();
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
-  
+
   const start = new Date(firstDay);
   const day = start.getDay();
   const diff = start.getDate() - day + (day === 0 ? -6 : 1);
   start.setDate(diff);
-  
+
   const dates = [];
   const endDate = new Date(lastDay);
   endDate.setDate(lastDay.getDate() + (7 - lastDay.getDay() === 7 ? 0 : 7 - lastDay.getDay()));
-  
+
   const current = new Date(start);
   while (current <= endDate) {
     dates.push(new Date(current));
@@ -62,7 +61,7 @@ function getMonthDates(date) {
 
 function parseLocalDate(dateStr) {
   if (!dateStr) return null;
-  
+
   let date;
   const parts = String(dateStr).split(' ');
   if (parts.length >= 2) {
@@ -73,7 +72,7 @@ function parseLocalDate(dateStr) {
   } else {
     date = new Date(dateStr);
   }
-  
+
   return isNaN(date.getTime()) ? null : date;
 }
 
@@ -84,9 +83,10 @@ function formatTotal(cost, hours) {
   return '';
 }
 
-export function Calendar({ tasks, customers, onEditTask }) {
+export function Calendar({ tasks, customers, onEditTask, onAddTaskAt, onMoveTask }) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState('week');
+  const [dragOver, setDragOver] = useState(null);
 
   const tasksByDate = useMemo(() => {
     const map = {};
@@ -134,16 +134,6 @@ export function Calendar({ tasks, customers, onEditTask }) {
       return `${formatDate(dates[0])} - ${formatDate(dates[6])}, ${dates[0].getFullYear()}`;
     } else {
       return currentDate.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
-    }
-  }
-
-  function getDates() {
-    if (view === 'day') {
-      return [currentDate];
-    } else if (view === 'week') {
-      return getWeekDates(currentDate);
-    } else {
-      return monthDates;
     }
   }
 
@@ -202,9 +192,62 @@ export function Calendar({ tasks, customers, onEditTask }) {
     return { cost, hours };
   }
 
-  const dates = getDates();
+  function slotKey(date, hour) {
+    return date.toDateString() + '-' + hour;
+  }
+
+  function toDateStr(date, hour) {
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(hour)}:00:00`;
+  }
+
+  function slotTasks(date, hour) {
+    const list = tasksByDate[date.toDateString()] || [];
+    return list.filter(t => {
+      const d = parseLocalDate(t.due_date);
+      return d && d.getHours() === hour;
+    });
+  }
+
+  function handleDrop(e, date, hour) {
+    e.preventDefault();
+    setDragOver(null);
+    const taskId = e.dataTransfer.getData('text/plain');
+    if (taskId && onMoveTask) onMoveTask(taskId, toDateStr(date, hour));
+  }
+
+  function handleDragStart(e, task) {
+    e.dataTransfer.setData('text/plain', task.id);
+    e.dataTransfer.effectAllowed = 'move';
+  }
+
+  function renderChip(task) {
+    const cost = parseFloat(task.cost) || 0;
+    return (
+      <div
+        key={task.id}
+        className="cal-task-chip"
+        style={{ borderLeftColor: getStageColor(task.stage) }}
+        draggable
+        onDragStart={e => handleDragStart(e, task)}
+        onDragEnd={() => setDragOver(null)}
+        onClick={e => { e.stopPropagation(); onEditTask(task); }}
+        title={task.title}
+      >
+        <span className="chip-time">{formatTime(parseLocalDate(task.due_date))}</span>
+        <span className="chip-title">{task.title}</span>
+        {cost > 0 && <span className="chip-cost">{cost.toLocaleString('ru-RU')} ₽</span>}
+      </div>
+    );
+  }
+
   const monthTotal = getMonthTotals();
   const numWeeks = Math.ceil(monthDates.length / 7);
+
+  const timeDays = view === 'day' ? [currentDate] : getWeekDates(currentDate);
+  const timeRangeTotal = timeDays.reduce((acc, d) => {
+    const { cost, hours } = getDayTotals(d);
+    return { cost: acc.cost + cost, hours: acc.hours + hours };
+  }, { cost: 0, hours: 0 });
 
   return (
     <div className="calendar">
@@ -228,68 +271,46 @@ export function Calendar({ tasks, customers, onEditTask }) {
         </div>
       </div>
 
-      <div className={`calendar-grid ${view}`}>
-        {view !== 'day' && (
+      {view === 'month' ? (
+        <div className="calendar-grid month">
           <div className="calendar-weekdays">
-            {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map((day, i) => (
+            {WEEKDAYS.map((day, i) => (
               <div key={i} className="weekday">{day}</div>
             ))}
           </div>
-        )}
-        
-        <div className="calendar-days">
-          {dates.map((date) => {
-            const key = date.toDateString();
-            const dayTasks = tasksByDate[key] || [];
-            const { cost: dayCost, hours: dayHours } = getDayTotals(date);
-            const dayTotal = formatTotal(dayCost, dayHours);
-            
-            return (
-              <div
-                key={key}
-                className={`calendar-day ${isToday(date) ? 'today' : ''} ${view === 'month' && !isCurrentMonth(date) ? 'other-month' : ''}`}
-              >
-                {view !== 'day' && (
+          <div className="calendar-days">
+            {monthDates.map((date) => {
+              const key = date.toDateString();
+              const dayTasks = tasksByDate[key] || [];
+              const { cost: dayCost, hours: dayHours } = getDayTotals(date);
+              const dayTotal = formatTotal(dayCost, dayHours);
+
+              return (
+                <div
+                  key={key}
+                  className={`calendar-day ${isToday(date) ? 'today' : ''} ${!isCurrentMonth(date) ? 'other-month' : ''}`}
+                >
                   <div className="day-header">
                     <span className="day-number">{date.getDate()}</span>
-                    {dayTotal && (
-                      <span className="day-total-inline">{dayTotal}</span>
-                    )}
+                    {dayTotal && <span className="day-total-inline">{dayTotal}</span>}
                   </div>
-                )}
-                <div className="day-tasks">
-                  {dayTasks.map(task => (
-                    <div
-                      key={task.id}
-                      className="calendar-task"
-                      style={{ borderLeftColor: getStageColor(task.stage) }}
-                      onClick={() => onEditTask(task)}
-                    >
-                      {view !== 'month' && (
-                        <span className="task-time">{formatTime(parseLocalDate(task.due_date))}</span>
-                      )}
-                      <span className="task-title">{task.title}</span>
-                      {view !== 'month' && (
-                        <span className="task-cost">{task.cost ? parseFloat(task.cost).toLocaleString('ru-RU') + ' ₽' : ''}</span>
-                      )}
-                      {view !== 'month' && (
-                        <span className="task-customer">{task.customer_name}</span>
-                      )}
-                    </div>
-                  ))}
-                  {dayTasks.length === 0 && view === 'day' && (
-                    <div className="no-tasks">Нет задач</div>
-                  )}
+                  <div className="day-tasks">
+                    {dayTasks.map(task => (
+                      <div
+                        key={task.id}
+                        className="calendar-task"
+                        style={{ borderLeftColor: getStageColor(task.stage) }}
+                        onClick={() => onEditTask(task)}
+                      >
+                        <span className="task-title">{task.title}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                {dayTotal && view === 'day' && (
-                  <div className="day-footer-total">{dayTotal}</div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
 
-        {view === 'month' && (
           <div className="calendar-month-summary">
             <div className="summary-row summary-month-total">
               <span>Итого за месяц:</span>
@@ -307,8 +328,50 @@ export function Calendar({ tasks, customers, onEditTask }) {
               })}
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className={`cal-time ${view}`}>
+          <div className="cal-time-header">
+            <div className="cal-gutter-header"></div>
+            {timeDays.map(d => (
+              <div
+                key={d.toDateString()}
+                className={`cal-day-head ${isToday(d) ? 'today' : ''}`}
+              >
+                <span className="cal-day-name">{WEEKDAYS[(d.getDay() + 6) % 7]}</span>
+                <span className="cal-day-num">{d.getDate()}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="cal-time-body">
+            {HOURS.map(hour => (
+              <div className="cal-hour-row" key={hour}>
+                <div className="cal-hour-label">{pad(hour)}:00</div>
+                {timeDays.map(d => {
+                  const cellTasks = slotTasks(d, hour);
+                  return (
+                    <div
+                      key={d.toDateString()}
+                      className={`cal-hour-cell ${dragOver === slotKey(d, hour) ? 'drag-over' : ''}`}
+                      onClick={() => onAddTaskAt?.(toDateStr(d, hour))}
+                      onDragOver={e => { e.preventDefault(); setDragOver(slotKey(d, hour)); }}
+                      onDrop={e => handleDrop(e, d, hour)}
+                    >
+                      {cellTasks.map(renderChip)}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+
+          <div className="cal-time-total">
+            {view === 'day' ? 'Итого за день: ' : 'Итого за неделю: '}
+            {formatTotal(timeRangeTotal.cost, timeRangeTotal.hours) || '—'}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
