@@ -1518,8 +1518,6 @@ body {
 
 .cal-block {
   position: absolute;
-  left: 2px;
-  right: 2px;
   background: #e6f0ff;
   border-left: 3px solid #999;
   border-radius: 4px;

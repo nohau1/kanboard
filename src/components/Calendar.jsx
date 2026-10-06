@@ -113,6 +113,48 @@ function durationMinutes(task) {
   return Math.max(SLOT_MIN, Math.round(h * 60));
 }
 
+function computeDayLayout(dayTasks) {
+  const events = dayTasks.map(t => {
+    const start = parseLocalDate(t.due_date);
+    const startMin = start.getHours() * 60 + start.getMinutes();
+    return { id: t.id, start: startMin, end: startMin + durationMinutes(t) };
+  }).sort((a, b) => a.start - b.start || b.end - a.end);
+
+  const layout = {};
+  let cluster = [];
+  let clusterEnd = -Infinity;
+
+  function flush() {
+    if (cluster.length === 0) return;
+    const lanes = [];
+    for (const ev of cluster) {
+      let lane = lanes.findIndex(end => end <= ev.start);
+      if (lane === -1) {
+        lane = lanes.length;
+        lanes.push(ev.end);
+      } else {
+        lanes[lane] = ev.end;
+      }
+      ev.lane = lane;
+    }
+    const cols = lanes.length || 1;
+    for (const ev of cluster) {
+      layout[ev.id] = { left: (ev.lane / cols) * 100, width: (1 / cols) * 100 };
+    }
+    cluster = [];
+    clusterEnd = -Infinity;
+  }
+
+  for (const ev of events) {
+    if (cluster.length && ev.start >= clusterEnd) flush();
+    cluster.push(ev);
+    clusterEnd = Math.max(clusterEnd, ev.end);
+  }
+  flush();
+
+  return layout;
+}
+
 export function Calendar({ tasks, customers, customerFilter, onCustomerFilterChange, onEditTask, onAddTaskAt, onMoveTask, onResizeTask }) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState('week');
@@ -336,7 +378,7 @@ export function Calendar({ tasks, customers, customerFilter, onCustomerFilterCha
     });
   }
 
-  function renderBlock(task, dayIndex) {
+  function renderBlock(task, dayIndex, box) {
     const start = parseLocalDate(task.due_date);
     const startMin = start.getHours() * 60 + start.getMinutes();
     let durMin = durationMinutes(task);
@@ -349,12 +391,20 @@ export function Calendar({ tasks, customers, customerFilter, onCustomerFilterCha
     const height = Math.max(SLOT_H, bottom - top) - 1;
     const cost = parseFloat(task.cost) || 0;
     const isDragging = drag && drag.type === 'move' && drag.taskId === task.id && drag.moved;
+    const left = box ? box.left : 0;
+    const width = box ? box.width : 100;
 
     return (
       <div
         key={task.id}
         className={`cal-block ${isDragging ? 'cal-block-moving' : ''}`}
-        style={{ top, height, borderLeftColor: getStageColor(task.stage) }}
+        style={{
+          top,
+          height,
+          left: `calc(${left}% + 2px)`,
+          width: `calc(${width}% - 4px)`,
+          borderLeftColor: getStageColor(task.stage),
+        }}
         onMouseDown={e => handleBlockMouseDown(e, task, dayIndex, startMin)}
         title={task.title}
       >
@@ -501,19 +551,23 @@ export function Calendar({ tasks, customers, customerFilter, onCustomerFilterCha
               </div>
 
               <div className="cal-columns" ref={columnsRef} style={{ height: GRID_HEIGHT }}>
-                {timeDays.map((d, dayIndex) => (
-                  <div
-                    key={d.toDateString()}
-                    className="cal-column"
-                    onMouseDown={e => handleColumnMouseDown(e, dayIndex)}
-                    style={{
-                      backgroundImage: `repeating-linear-gradient(to bottom, #f0f0f0 0, #f0f0f0 1px, transparent 1px, transparent ${SLOT_H}px)`,
-                      backgroundSize: `100% ${SLOT_H}px`,
-                    }}
-                  >
-                    {(tasksByDate[d.toDateString()] || []).map(task => renderBlock(task, dayIndex))}
-                  </div>
-                ))}
+                {timeDays.map((d, dayIndex) => {
+                  const dayTasks = tasksByDate[d.toDateString()] || [];
+                  const layout = computeDayLayout(dayTasks);
+                  return (
+                    <div
+                      key={d.toDateString()}
+                      className="cal-column"
+                      onMouseDown={e => handleColumnMouseDown(e, dayIndex)}
+                      style={{
+                        backgroundImage: `repeating-linear-gradient(to bottom, #f0f0f0 0, #f0f0f0 1px, transparent 1px, transparent ${SLOT_H}px)`,
+                        backgroundSize: `100% ${SLOT_H}px`,
+                      }}
+                    >
+                      {dayTasks.map(task => renderBlock(task, dayIndex, layout[task.id]))}
+                    </div>
+                  );
+                })}
 
                 {drag && drag.type === 'create' && (
                   <div
