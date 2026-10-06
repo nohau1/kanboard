@@ -1070,6 +1070,19 @@ body {
   color: white;
 }
 
+.calendar-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.calendar-filter {
+  margin-bottom: 0;
+  padding: 0;
+  background: transparent;
+}
+
 .calendar-grid {
   padding: 16px;
 }

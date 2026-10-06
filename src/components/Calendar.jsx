@@ -439,32 +439,33 @@ export function Calendar({ tasks, customers, customerFilter, onCustomerFilterCha
           <button onClick={() => navigate(1)}>&gt;</button>
         </div>
         <h2 className="calendar-title">{getTitle()}</h2>
-        <div className="calendar-views">
-          {['day', 'week', 'month'].map(v => (
-            <button
-              key={v}
-              className={view === v ? 'active' : ''}
-              onClick={() => setView(v)}
-            >
-              {v === 'day' ? 'День' : v === 'week' ? 'Неделя' : 'Месяц'}
-            </button>
-          ))}
+        <div className="calendar-header-right">
+          <div className="stage-filter calendar-filter">
+            <span>Заказчик:</span>
+            <select value={customerFilter || ''} onChange={e => onCustomerFilterChange?.(e.target.value)}>
+              <option value="">Все заказчики</option>
+              {customers.map(c => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+            {customerFilter && (
+              <button type="button" className="link" onClick={() => onCustomerFilterChange?.('')}>
+                Сбросить
+              </button>
+            )}
+          </div>
+          <div className="calendar-views">
+            {['day', 'week', 'month'].map(v => (
+              <button
+                key={v}
+                className={view === v ? 'active' : ''}
+                onClick={() => setView(v)}
+              >
+                {v === 'day' ? 'День' : v === 'week' ? 'Неделя' : 'Месяц'}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
-
-      <div className="stage-filter">
-        <span>Заказчик:</span>
-        <select value={customerFilter || ''} onChange={e => onCustomerFilterChange?.(e.target.value)}>
-          <option value="">Все заказчики</option>
-          {customers.map(c => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
-        {customerFilter && (
-          <button type="button" className="link" onClick={() => onCustomerFilterChange?.('')}>
-            Сбросить
-          </button>
-        )}
       </div>
 
       {view === 'month' ? (
