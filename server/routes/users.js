@@ -10,7 +10,7 @@ router.use(requireAdmin);
 
 router.get('/', async (req, res) => {
   try {
-    const [users] = await pool.execute('SELECT id, username, role, created_at FROM users ORDER BY created_at DESC');
+    const [users] = await pool.execute('SELECT id, username, role, allowed_stages, created_at FROM users ORDER BY created_at DESC');
     
     const usersWithCustomers = await Promise.all(users.map(async (user) => {
       const [customerRows] = await pool.execute(
@@ -18,7 +18,8 @@ router.get('/', async (req, res) => {
         [user.id]
       );
       return { 
-        ...user, 
+        ...user,
+        allowedStages: user.allowed_stages == null ? null : user.allowed_stages.split(',').filter(Boolean),
         customerIds: customerRows.map(r => r.customer_id) 
       };
     }));
@@ -31,7 +32,7 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-  const { username, password, role, customerIds } = req.body;
+  const { username, password, role, customerIds, allowedStages } = req.body;
   
   if (!username || !password) {
     return res.status(400).json({ error: 'Укажите логин и пароль' });
@@ -44,11 +45,12 @@ router.post('/', async (req, res) => {
 
   const id = 'u' + Date.now();
   const hashedPassword = bcrypt.hashSync(password, 10);
+  const stagesCsv = Array.isArray(allowedStages) ? allowedStages.join(',') : null;
   
   try {
     await pool.execute(
-      'INSERT INTO users (id, username, password, role) VALUES (?, ?, ?, ?)',
-      [id, username, hashedPassword, role || 'user']
+      'INSERT INTO users (id, username, password, role, allowed_stages) VALUES (?, ?, ?, ?, ?)',
+      [id, username, hashedPassword, role || 'user', stagesCsv]
     );
     
     if (customerIds && customerIds.length > 0) {
@@ -61,10 +63,14 @@ router.post('/', async (req, res) => {
     }
     
     const [rows] = await pool.execute(
-      'SELECT id, username, role, created_at FROM users WHERE id = ?',
+      'SELECT id, username, role, allowed_stages, created_at FROM users WHERE id = ?',
       [id]
     );
-    res.status(201).json({ ...rows[0], customerIds: customerIds || [] });
+    res.status(201).json({
+      ...rows[0],
+      allowedStages: rows[0].allowed_stages == null ? null : rows[0].allowed_stages.split(',').filter(Boolean),
+      customerIds: customerIds || [],
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Ошибка при создании пользователя' });
@@ -73,7 +79,7 @@ router.post('/', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
-  const { username, password, role, customerIds } = req.body;
+  const { username, password, role, customerIds, allowedStages } = req.body;
   
   const [userRows] = await pool.execute('SELECT * FROM users WHERE id = ?', [id]);
   const user = userRows[0];
@@ -89,17 +95,19 @@ router.put('/:id', async (req, res) => {
     }
   }
 
+  const stagesCsv = Array.isArray(allowedStages) ? allowedStages.join(',') : null;
+
   try {
     if (password) {
       const hashedPassword = bcrypt.hashSync(password, 10);
       await pool.execute(
-        'UPDATE users SET username = ?, password = ?, role = ? WHERE id = ?',
-        [username || user.username, hashedPassword, role || user.role, id]
+        'UPDATE users SET username = ?, password = ?, role = ?, allowed_stages = ? WHERE id = ?',
+        [username || user.username, hashedPassword, role || user.role, stagesCsv, id]
       );
     } else {
       await pool.execute(
-        'UPDATE users SET username = ?, role = ? WHERE id = ?',
-        [username || user.username, role || user.role, id]
+        'UPDATE users SET username = ?, role = ?, allowed_stages = ? WHERE id = ?',
+        [username || user.username, role || user.role, stagesCsv, id]
       );
     }
 
@@ -114,10 +122,14 @@ router.put('/:id', async (req, res) => {
     }
     
     const [rows] = await pool.execute(
-      'SELECT id, username, role, created_at FROM users WHERE id = ?',
+      'SELECT id, username, role, allowed_stages, created_at FROM users WHERE id = ?',
       [id]
     );
-    res.json({ ...rows[0], customerIds: customerIds || [] });
+    res.json({
+      ...rows[0],
+      allowedStages: rows[0].allowed_stages == null ? null : rows[0].allowed_stages.split(',').filter(Boolean),
+      customerIds: customerIds || [],
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Ошибка при обновлении' });

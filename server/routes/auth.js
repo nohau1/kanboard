@@ -29,6 +29,7 @@ router.post('/login', async (req, res) => {
         id: user.id,
         username: user.username,
         role: user.role,
+        allowedStages: user.allowed_stages == null ? null : user.allowed_stages.split(',').filter(Boolean),
       },
     });
   } catch (err) {
@@ -47,7 +48,7 @@ router.get('/me', async (req, res) => {
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    const [rows] = await pool.execute('SELECT id, username, role FROM users WHERE id = ?', [decoded.userId]);
+    const [rows] = await pool.execute('SELECT id, username, role, allowed_stages FROM users WHERE id = ?', [decoded.userId]);
     const user = rows[0];
     
     if (!user) {
@@ -60,7 +61,13 @@ router.get('/me', async (req, res) => {
     );
     const customerIds = customerRows.map(r => r.customer_id);
 
-    res.json({ ...user, customerIds });
+    res.json({
+      id: user.id,
+      username: user.username,
+      role: user.role,
+      allowedStages: user.allowed_stages == null ? null : user.allowed_stages.split(',').filter(Boolean),
+      customerIds,
+    });
   } catch (err) {
     res.status(403).json({ error: 'Недействительный токен' });
   }

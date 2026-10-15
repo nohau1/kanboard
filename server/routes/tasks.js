@@ -25,13 +25,17 @@ router.get('/', async (req, res) => {
         ORDER BY t.stage, t.position, t.created_at
       `);
     } else {
+      const allowed = req.user.allowedStages;
+      const stageFilter = allowed && allowed.length > 0
+        ? ` AND t.stage IN (${allowed.map(() => '?').join(',')})`
+        : (allowed && allowed.length === 0 ? ' AND 1=0' : '');
       [rows] = await pool.execute(`
         SELECT t.*, c.name as customer_name 
         FROM tasks t 
         LEFT JOIN customers c ON t.customer_id = c.id 
-        WHERE t.customer_id IN (SELECT customer_id FROM user_customers WHERE user_id = ?)
+        WHERE t.customer_id IN (SELECT customer_id FROM user_customers WHERE user_id = ?)${stageFilter}
         ORDER BY t.stage, t.position, t.created_at
-      `, [req.user.id]);
+      `, [req.user.id, ...(allowed && allowed.length > 0 ? allowed : [])]);
     }
     
     res.json(rows);
@@ -225,13 +229,17 @@ router.post('/reorder', async (req, res) => {
         ORDER BY t.stage, t.position, t.created_at
       `);
     } else {
+      const allowed = req.user.allowedStages;
+      const stageFilter = allowed && allowed.length > 0
+        ? ` AND t.stage IN (${allowed.map(() => '?').join(',')})`
+        : (allowed && allowed.length === 0 ? ' AND 1=0' : '');
       [rows] = await pool.execute(`
         SELECT t.*, c.name as customer_name 
         FROM tasks t 
         LEFT JOIN customers c ON t.customer_id = c.id 
-        WHERE t.customer_id IN (SELECT customer_id FROM user_customers WHERE user_id = ?)
+        WHERE t.customer_id IN (SELECT customer_id FROM user_customers WHERE user_id = ?)${stageFilter}
         ORDER BY t.stage, t.position, t.created_at
-      `, [req.user.id]);
+      `, [req.user.id, ...(allowed && allowed.length > 0 ? allowed : [])]);
     }
 
     res.json(rows);

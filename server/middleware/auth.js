@@ -17,14 +17,19 @@ export async function authenticateToken(req, res, next) {
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    const [rows] = await pool.execute('SELECT id, username, role FROM users WHERE id = ?', [decoded.userId]);
+    const [rows] = await pool.execute('SELECT id, username, role, allowed_stages FROM users WHERE id = ?', [decoded.userId]);
     const user = rows[0];
     
     if (!user) {
       return res.status(401).json({ error: 'Пользователь не найден' });
     }
     
-    req.user = user;
+    req.user = {
+      id: user.id,
+      username: user.username,
+      role: user.role,
+      allowedStages: user.allowed_stages == null ? null : user.allowed_stages.split(',').filter(Boolean),
+    };
     next();
   } catch (err) {
     return res.status(403).json({ error: 'Недействительный токен' });

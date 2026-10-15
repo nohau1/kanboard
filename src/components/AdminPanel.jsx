@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { stages } from '../data';
 import './AdminPanel.css';
 
 export function AdminPanel({ onClose, onEditTask, tasks }) {
@@ -228,11 +229,16 @@ export function AdminPanel({ onClose, onEditTask, tasks }) {
   );
 }
 
+const ALL_STAGE_IDS = stages.map(s => s.id);
+
 function UserForm({ user, customers, onSave, onCancel }) {
   const [username, setUsername] = useState(user?.username || '');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState(user?.role || 'user');
   const [selectedCustomers, setSelectedCustomers] = useState(user?.customerIds || []);
+  const [selectedStages, setSelectedStages] = useState(
+    () => (user && Array.isArray(user.allowedStages)) ? user.allowedStages : ALL_STAGE_IDS
+  );
 
   function handleSubmit(e) {
     e.preventDefault();
@@ -241,12 +247,19 @@ function UserForm({ user, customers, onSave, onCancel }) {
       password: password || undefined,
       role,
       customerIds: selectedCustomers,
+      allowedStages: selectedStages.length === ALL_STAGE_IDS.length ? null : selectedStages,
     });
   }
 
   function toggleCustomer(id) {
     setSelectedCustomers(prev =>
       prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]
+    );
+  }
+
+  function toggleStage(id) {
+    setSelectedStages(prev =>
+      prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
     );
   }
 
@@ -270,6 +283,20 @@ function UserForm({ user, customers, onSave, onCancel }) {
         <option value="user">Пользователь</option>
         <option value="admin">Администратор</option>
       </select>
+      <div className="form-checkboxes-label">Видимые стадии:</div>
+      <div className="customer-checkboxes">
+        {stages.map(s => (
+          <label key={s.id}>
+            <input
+              type="checkbox"
+              checked={selectedStages.includes(s.id)}
+              onChange={() => toggleStage(s.id)}
+            />
+            {s.title}
+          </label>
+        ))}
+      </div>
+      <div className="form-checkboxes-label">Заказчики:</div>
       <div className="customer-checkboxes">
         {customers.map(c => (
           <label key={c.id}>

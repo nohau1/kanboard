@@ -22,9 +22,16 @@ async function initDb() {
         username VARCHAR(100) UNIQUE NOT NULL,
         password VARCHAR(255) NOT NULL,
         role VARCHAR(20) DEFAULT 'user',
+        allowed_stages VARCHAR(255),
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    try {
+      await connection.execute('ALTER TABLE users ADD COLUMN allowed_stages VARCHAR(255)');
+    } catch (e) {
+      if (!e.message.includes('Duplicate')) console.log('allowed_stages column check done');
+    }
 
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS customers (

@@ -3,8 +3,10 @@ import { CustomerColumn } from './CustomerColumn';
 
 const STAGE_ORDER = { 'in-progress': 0, 'testing': 1, 'todo': 2, 'done': 3, 'paid': 4 };
 
-export function CustomerKanbanBoard({ tasks, customers, onAddTask, onEditTask, onDeleteTask }) {
-  const [stageFilter, setStageFilter] = useState(['in-progress', 'testing', 'todo']);
+export function CustomerKanbanBoard({ tasks, customers, stages, onAddTask, onEditTask, onDeleteTask }) {
+  const [stageFilter, setStageFilter] = useState(
+    () => stages.filter(s => ['in-progress', 'testing', 'todo'].includes(s.id)).map(s => s.id)
+  );
 
   const filteredTasks = tasks.filter(t => stageFilter.includes(t.stage));
   
@@ -23,20 +25,20 @@ export function CustomerKanbanBoard({ tasks, customers, onAddTask, onEditTask, o
     <div className="customer-board">
       <div className="stage-filter">
         <span>Показывать:</span>
-        {['todo', 'in-progress', 'testing', 'done', 'paid'].map(stage => (
-          <label key={stage}>
+        {stages.map(stage => (
+          <label key={stage.id}>
             <input
               type="checkbox"
-              checked={stageFilter.includes(stage)}
+              checked={stageFilter.includes(stage.id)}
               onChange={() => {
-                if (stageFilter.includes(stage)) {
-                  setStageFilter(stageFilter.filter(s => s !== stage));
+                if (stageFilter.includes(stage.id)) {
+                  setStageFilter(stageFilter.filter(s => s !== stage.id));
                 } else {
-                  setStageFilter([...stageFilter, stage]);
+                  setStageFilter([...stageFilter, stage.id]);
                 }
               }}
             />
-            {stage === 'todo' ? 'К выполнению' : stage === 'in-progress' ? 'В работе' : stage === 'testing' ? 'Тестирование' : stage === 'done' ? 'Готово' : 'Оплачено'}
+            {stage.title}
           </label>
         ))}
       </div>

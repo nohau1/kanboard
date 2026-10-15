@@ -214,6 +214,13 @@
   margin-top: 8px;
 }
 
+.form-checkboxes-label {
+  flex: 100%;
+  margin-top: 8px;
+  font-size: 13px;
+  color: #666;
+}
+
 .customer-checkboxes label {
   display: flex;
   align-items: center;

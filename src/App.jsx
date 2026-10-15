@@ -131,18 +131,31 @@ export default function App() {
 
   async function loadData() {
     try {
-      const [tasksData, customersData] = await Promise.all([
+      const [tasksData, customersData, meData] = await Promise.all([
         api.tasks.list(),
         api.customers.list(),
+        api.auth.me(),
       ]);
       setTasks(tasksData);
       setCustomers(customersData);
+      if (meData && meData.id) {
+        setUser(prev => {
+          const merged = { ...prev, ...meData };
+          if (JSON.stringify(prev) === JSON.stringify(merged)) return prev;
+          localStorage.setItem('user', JSON.stringify(merged));
+          return merged;
+        });
+      }
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
   }
+
+  const visibleStages = user?.allowedStages
+    ? stages.filter(s => user.allowedStages.includes(s.id))
+    : stages;
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -434,6 +447,7 @@ export default function App() {
               <KanbanBoard
                 tasks={tasks}
                 customers={customers}
+                stages={visibleStages}
                 customerFilter={stageCustomerFilter}
                 onCustomerFilterChange={updateStageCustomerFilter}
                 onAddTask={handleAddTask}
@@ -444,6 +458,7 @@ export default function App() {
               <CustomerKanbanBoard
                 tasks={tasks}
                 customers={customers}
+                stages={visibleStages}
                 onAddTask={handleAddTask}
                 onEditTask={handleEditTask}
                 onDeleteTask={handleDeleteTask}
@@ -462,7 +477,7 @@ export default function App() {
         <TaskModal
           task={modal.task}
           customers={customers}
-          stages={stages}
+          stages={visibleStages}
           initialStage={modal.mode === 'stage' ? modal.containerId : null}
           initialCustomer={
             modal.mode === 'customer'

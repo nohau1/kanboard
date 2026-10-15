@@ -1,7 +1,6 @@
 import { Column } from './Column';
-import { stages } from '../data';
 
-export function KanbanBoard({ tasks, customers, customerFilter, onCustomerFilterChange, onAddTask, onEditTask, onDeleteTask }) {
+export function KanbanBoard({ tasks, customers, stages, customerFilter, onCustomerFilterChange, onAddTask, onEditTask, onDeleteTask }) {
   const filteredTasks = customerFilter
     ? tasks.filter(t => t.customer_id === customerFilter)
     : tasks;
