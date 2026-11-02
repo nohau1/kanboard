@@ -1,4 +1,5 @@
 import { Column } from './Column';
+import { ScrollableBoard } from './ScrollableBoard';
 
 export function KanbanBoard({ tasks, customers, stages, customerFilter, onCustomerFilterChange, onAddTask, onEditTask, onDeleteTask }) {
   const filteredTasks = customerFilter
@@ -21,7 +22,7 @@ export function KanbanBoard({ tasks, customers, stages, customerFilter, onCustom
           </button>
         )}
       </div>
-      <div className="board">
+      <ScrollableBoard>
         {stages.map(stage => {
           const stageTasks = filteredTasks.filter(t => t.stage === stage.id);
           const totalCost = stageTasks.reduce((sum, t) => sum + (parseFloat(t.cost) || 0), 0);
@@ -42,7 +43,7 @@ export function KanbanBoard({ tasks, customers, stages, customerFilter, onCustom
             />
           );
         })}
-      </div>
+      </ScrollableBoard>
     </div>
   );
 }

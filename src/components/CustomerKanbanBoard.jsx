@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { CustomerColumn } from './CustomerColumn';
+import { ScrollableBoard } from './ScrollableBoard';
 
 const STAGE_ORDER = { 'in-progress': 0, 'testing': 1, 'todo': 2, 'done': 3, 'paid': 4 };
 
@@ -42,7 +43,7 @@ export function CustomerKanbanBoard({ tasks, customers, stages, onAddTask, onEdi
           </label>
         ))}
       </div>
-      <div className="board">
+      <ScrollableBoard>
         {customersWithTasks.map(customer => {
           const customerTasks = sortedTasks.filter(t => t.customer_id === customer.id);
           const totalCost = customerTasks.reduce((sum, t) => sum + (parseFloat(t.cost) || 0), 0);
@@ -61,7 +62,7 @@ export function CustomerKanbanBoard({ tasks, customers, stages, onAddTask, onEdi
             />
           );
         })}
-      </div>
+      </ScrollableBoard>
     </div>
   );
 }

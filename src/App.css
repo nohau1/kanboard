@@ -86,6 +86,75 @@ body {
   padding-bottom: 20px;
 }
 
+.scroll-board {
+  position: relative;
+}
+
+.scroll-hint {
+  position: absolute;
+  top: 0;
+  bottom: 20px;
+  width: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  outline: none;
+  opacity: 0;
+  pointer-events: none;
+  cursor: pointer;
+  z-index: 20;
+  transition: opacity 0.18s ease;
+}
+
+.scroll-hint.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.scroll-hint-left {
+  left: 0;
+  background: linear-gradient(
+    to right,
+    rgba(240, 242, 245, 0.98) 0%,
+    rgba(240, 242, 245, 0.92) 55%,
+    rgba(240, 242, 245, 0) 100%
+  );
+}
+
+.scroll-hint-right {
+  right: 0;
+  background: linear-gradient(
+    to left,
+    rgba(240, 242, 245, 0.98) 0%,
+    rgba(240, 242, 245, 0.92) 55%,
+    rgba(240, 242, 245, 0) 100%
+  );
+}
+
+.scroll-hint-arrow {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 3px;
+  border-radius: 50%;
+  background: white;
+  color: #333;
+  font-size: 24px;
+  line-height: 1;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.scroll-hint:hover .scroll-hint-arrow,
+.scroll-hint:focus-visible .scroll-hint-arrow {
+  transform: scale(1.12);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.24);
+}
+
 .column {
   flex: 0 0 280px;
   background: #e8e8e8;
