@@ -569,6 +569,10 @@ body {
   color: #333;
 }
 
+.history-created {
+  color: #1890ff;
+}
+
 .modal-actions {
   display: flex;
   justify-content: space-between;

@@ -324,6 +324,11 @@ export function TaskModal({ task, customers, stages, initialStage, initialCustom
                   <span className="history-date">{new Date(h.created_at).toLocaleString('ru-RU')}</span>
                   <span className="history-user">{h.username || '—'}</span>
                   <span className="history-change">
+                    {h.field === 'created' && (
+                      <span className="history-created">
+                        Создана · начальная стадия: {STAGE_LABELS[h.new_value] || h.new_value}
+                      </span>
+                    )}
                     {h.field === 'stage' && (
                       <>{STAGE_LABELS[h.old_value] || h.old_value} → {STAGE_LABELS[h.new_value] || h.new_value}</>
                     )}

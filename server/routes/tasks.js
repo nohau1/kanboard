@@ -77,6 +77,11 @@ router.post('/', async (req, res) => {
       'INSERT INTO tasks (id, title, stage, customer_id, user_id, position, due_date, cost, hours, description, paid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [id, title, stageOrder, customer_id, req.user.id, newPosition, due_date || null, cost || 0, hours || 0, description || null, paid ? 1 : 0]
     );
+
+    await pool.execute(
+      'INSERT INTO task_history (id, task_id, user_id, field, old_value, new_value) VALUES (?, ?, ?, ?, ?, ?)',
+      ['h' + Date.now(), id, req.user.id, 'created', null, stageOrder]
+    );
     
     const [rows] = await pool.execute(
       'SELECT t.*, c.name as customer_name FROM tasks t LEFT JOIN customers c ON t.customer_id = c.id WHERE t.id = ?',
@@ -251,12 +256,47 @@ router.post('/reorder', async (req, res) => {
 
 router.get('/:id/history', async (req, res) => {
   try {
+    const [taskRows] = await pool.execute(`
+      SELECT t.id, t.stage, t.created_at, u.username as creator
+      FROM tasks t
+      LEFT JOIN users u ON t.user_id = u.id
+      WHERE t.id = ?
+    `, [req.params.id]);
+    const task = taskRows[0];
+
+    if (!task) {
+      return res.status(404).json({ error: 'Задача не найдена' });
+    }
+
     const [rows] = await pool.execute(`
       SELECT th.*, u.username FROM task_history th
       LEFT JOIN users u ON th.user_id = u.id
       WHERE th.task_id = ?
-      ORDER BY th.created_at DESC
+      ORDER BY th.created_at DESC, th.id DESC
     `, [req.params.id]);
+
+    // Для задач, созданных до появления записи о создании, добавляем её на основе
+    // даты создания задачи и стадии из самой ранней записи об изменении стадии.
+    if (!rows.some(r => r.field === 'created')) {
+      const [stageRows] = await pool.execute(`
+        SELECT old_value FROM task_history
+        WHERE task_id = ? AND field = 'stage'
+        ORDER BY created_at ASC, id ASC
+        LIMIT 1
+      `, [req.params.id]);
+
+      rows.push({
+        id: 'created-' + task.id,
+        task_id: task.id,
+        user_id: null,
+        username: task.creator,
+        field: 'created',
+        old_value: null,
+        new_value: stageRows[0]?.old_value || task.stage,
+        created_at: task.created_at,
+      });
+    }
+
     res.json(rows);
   } catch (err) {
     console.error(err);
