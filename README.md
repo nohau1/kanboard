@@ -10,6 +10,28 @@
 
 Система управления задачами с канбан-доской и финансовой частью.
 
+### Скриншоты
+
+**Канбан-доска по стадиям**
+
+![Канбан-доска по стадиям](docs/screenshots/stages.png)
+
+**Задачи по заказчикам**
+
+![Задачи по заказчикам](docs/screenshots/customers.png)
+
+**Календарь**
+
+![Календарь](docs/screenshots/calendar.png)
+
+**Финансы**
+
+![Финансы](docs/screenshots/finance.png)
+
+**Карточка задачи с историей**
+
+![Карточка задачи](docs/screenshots/task.png)
+
 ### Функционал
 
 #### Задачи
@@ -253,6 +275,28 @@ server {
 ## English
 
 Task management system with a Kanban board and a finance module.
+
+### Screenshots
+
+**Kanban board by stages**
+
+![Kanban board by stages](docs/screenshots/stages.png)
+
+**Tasks by customer**
+
+![Tasks by customer](docs/screenshots/customers.png)
+
+**Calendar**
+
+![Calendar](docs/screenshots/calendar.png)
+
+**Finance**
+
+![Finance](docs/screenshots/finance.png)
+
+**Task card with history**
+
+![Task card](docs/screenshots/task.png)
 
 ### Features
 
