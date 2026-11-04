@@ -527,7 +527,7 @@ export function Calendar({ tasks, customers, customerFilter, onCustomerFilterCha
           </div>
         </div>
       ) : (
-        <div className={`cal-time ${view} ${drag ? 'is-dragging' : ''}`}>
+        <div className={`cal-time ${view} ${drag ? 'is-dragging' : ''} ${drag?.type === 'move' ? 'is-moving' : ''}`}>
           <div className="cal-time-body">
             <div className="cal-time-header">
               <div className="cal-gutter-header"></div>
